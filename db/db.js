@@ -6,17 +6,14 @@ const db = fs.existsSync(devPath) ? require('./dev') : require('./prod');
 
 const isDev = fs.existsSync(devPath);
 
-const createTableSQL = isDev
-  ? `CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      age INT
-    )`
-  : `CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
-      name TEXT,
-      age INT
-    )`;
+const createTableSQL = `CREATE TABLE IF NOT EXISTS super_admins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);`;
 
 // Automatically run table setup
 (async () => {
