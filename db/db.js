@@ -1,4 +1,4 @@
-const fs = require('fs');
+pconst fs = require('fs');
 const path = require('path');
 
 const devPath = path.join(__dirname, 'dev.js');
@@ -6,14 +6,21 @@ const db = fs.existsSync(devPath) ? require('./dev') : require('./prod');
 
 const isDev = fs.existsSync(devPath);
 
-const createTableSQL = `CREATE TABLE IF NOT EXISTS super_admins (
+const createTableSQL = isDev ? `CREATE TABLE IF NOT EXISTS super_admins (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);`;
+);` : `CREATE TABLE IF NOT EXISTS super_admins (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`
 
 // Automatically run table setup
 (async () => {
