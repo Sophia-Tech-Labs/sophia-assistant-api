@@ -1,4 +1,4 @@
-pconst fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 
 const devPath = path.join(__dirname, 'dev.js');
@@ -20,12 +20,31 @@ const createTableSQL = isDev ? `CREATE TABLE IF NOT EXISTS super_admins (
   password_hash TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);`
+);`;
+
+const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL,
+	email TEXT NOT NULL,
+	password_hash TEXT NOT NULL,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	
+);` : `CREATE TABLE IF NOT EXISTS admins(
+	id SERIAL PRIMARY KEY,
+	name TEXT NOT NULL,
+	email TEXT NOT NULL,
+	password_hash TEXT NOT NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	
+);`;
 
 // Automatically run table setup
 (async () => {
   try {
     await db.query(createTableSQL);
+    await db.query(createAdminSQLTable);
     console.log(`[DB] Users table ready (${isDev ? 'SQLite' : 'PostgreSQL'})`);
   } catch (err) {
     console.error('[DB] Error creating table:', err);
