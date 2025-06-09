@@ -92,5 +92,9 @@ const superAdminFunctions = {
 		 });
 		}
 	},
+	async addAdmin(){
+		
+	}
+
 }
 module.exports = superAdminFunctions;
