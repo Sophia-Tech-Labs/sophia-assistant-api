@@ -3,8 +3,9 @@ const express = require('express');
 const app = express();
 const path = require("path");
 const supAdmRoutes = require('./routes/superAdminRoutes');
-
+const cookieParser = require('cookie-parser');
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/',(req, res) =>{
 	res.sendFile(path.join(__dirname,"public","index.html"));
@@ -18,7 +19,7 @@ app.get('/health', (req, res) => {
 app.use('/super-admin', supAdmRoutes);
 
 // Basic error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res, next) => {//
   console.error(err.stack);
   res.status(500).json({ error: 'Something broke!' });
 });
