@@ -88,7 +88,7 @@ const AdminLogin = {
     } catch (error) {
                 res.status(500).json({
                   status: 500,
-                  message: "Something went wrong",
+                  error: "Something went wrong",
                 });
               
           }
