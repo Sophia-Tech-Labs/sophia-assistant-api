@@ -70,13 +70,31 @@ const superAdminFunctions = {
 		}
 		try{
 		const infoQuery = await db.query("SELECT * FROM super_admins WHERE email = $1",[email])
-		const accessToken = jwt.sign({ id:infoQuery[0].id,name:infoQuery[0].name, email:infoQuery[0].email,role:"super-admin" },process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRIES_IN || "2h" });
-		const refreshToken = jwt.sign({ id:infoQuery[0].id,name:infoQuery[0].name, email:infoQuery[0].email },process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRIES_IN || "7d" });
+		const accessToken = jwt.sign({ id:infoQuery[0].id,name:infoQuery[0].name, email:infoQuery[0].email,role:"super-admin" },process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRIES_IN || "15m" });
+		const refreshToken = jwt.sign({ id:infoQuery[0].id,name:infoQuery[0].name, email:infoQuery[0].email,role:"super-admin" },process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRIES_IN || "7d" });
+		
+		let bool;
+		if(process.env.PROJECT_TYPE === "prod"){
+		bool = true;
+		} else{
+		bool = false;
+		}
+		res.cookie('accessToken', accessToken, {
+		      httpOnly: true,         // 👉 Client JS can't access it
+		      secure: bool,          // true in production (with HTTPS)
+		      sameSite: 'lax',        // Can be 'strict' | 'lax' | 'none'
+		      maxAge: 15 * 60 * 1000  // 15 minutes
+		    });
+		
+		    res.cookie('refreshToken', refreshToken, {
+		      httpOnly: true,
+		      secure: bool,
+		      sameSite: 'lax',
+		      maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+		    });
 
 		res.json({
 			status:200,
-			accessToken:accessToken,
-			refreshToken:refreshToken,
 			message:"logged In successfully",
 			user: {
 			    id: infoQuery[0].id,
