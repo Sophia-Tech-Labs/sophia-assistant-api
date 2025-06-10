@@ -1,17 +1,30 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-
+const adminController = require('./controllers/adminController');
 const supAdmRoutes = require('./routes/superAdminRoutes');
-
+const AdmRoutes = require("./routes/authRoutes");
+const cors = require("cors");
+const path = require("path");
+app.use(
+  cors({
+    origin: true, // reflect request origin
+    credentials: true, // allow cookies/auth headers
+  })
+);
 app.use(express.json());
 
 app.get('/health', (req, res) => {
   res.json({ status: 'API is running' });
 });
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "routes", "index.html"));
+});
+
 
 // Mount auth routes
 app.use('/super-admin', supAdmRoutes);
+app.use("/admin", AdmRoutes);
 
 // Basic error handler
 app.use((err, req, res, next) => {

@@ -1,8 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../controllers/authController")
+const AdmLn = require("../controllers/adminController");
+const rateLimit = require("express-rate-limit");
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 7,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many login attempts, please try again later.",
+});
+
 //Routes…
-
-
-
+router.post("/login", loginLimiter, AdmLn.AdminLogin);
 module.exports = router;

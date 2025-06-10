@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGIN</title>
+</head>
+<body>
+    <button onclick="login()">Login</button>
+</body>
+<script>
+    let email="admin"
+     let password="pass"
+    async function  login() {
+        const response = await fetch('http://localhost:4000/admin/login', {
+      method: 'POST',
+      credentials:"include",
+      headers: {
+        'Access-Control-Allow-Origin':'*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+     if (!response) {
+        console.log('Error');
+        return
+     }
+      data = await response.json();
+      console.log(data)
+    }
+</script>
+</html>
