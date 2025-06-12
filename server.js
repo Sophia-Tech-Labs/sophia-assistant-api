@@ -4,7 +4,7 @@ const app = express();
 const AdmRoutes = require("./routes/authRoutes");
 const cors = require("cors");
 const path = require("path");
-
+const adm = require("../controllers/adminController");
 const supAdmRoutes = require('./routes/superAdminRoutes');
 const cookieParser = require('cookie-parser');
 app.use(express.json());
@@ -29,7 +29,7 @@ app.use('/super-admin', supAdmRoutes);
 app.use("/admin", AdmRoutes);
 
 // Basic error handler
-app.use((err, req, res, next) => {//
+app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something broke!' });
 });
@@ -38,6 +38,7 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Sophia Assistant API running on port ${PORT}`);
 });
+
 
 
 const { close } = require('./db/db.js');

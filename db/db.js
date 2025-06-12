@@ -27,8 +27,7 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	name TEXT NOT NULL,
 	email TEXT NOT NULL,
 	password_hash TEXT NOT NULL,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	
 );` : `CREATE TABLE IF NOT EXISTS admins(
 	id SERIAL PRIMARY KEY,
@@ -39,12 +38,26 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	
 );`;
+const createAdminCodeSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admin_codes(	
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+ 	adm_codes TEXT NOT NULL,
+	creation_time TEXT NOT NULL,
+	expires_at TEXT NOT NULL,
+	validity BOOLEAN DEFAULT 1
 
+);` : `CREATE TABLE IF NOT EXISTS admin_codes(
+	id SERIAL PRIMARY KEY,
+	adm_codes TEXT NOT NULL,
+	creation_time TEXT NOT NULL,
+ 	expires_at TEXT NOT NULL,
+  	validity BOOLEAN DEFAULT TRUE
+);`;
 // Automatically run table setup
 (async () => {
   try {
     await db.query(createTableSQL);
     await db.query(createAdminSQLTable);
+    await db.query(createAdminCodeSQLTable);
     console.log(`[DB] Users table ready (${isDev ? 'SQLite' : 'PostgreSQL'})`);
   } catch (err) {
     console.error('[DB] Error creating table:', err);

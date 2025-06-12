@@ -13,4 +13,5 @@ const loginLimiter = rateLimit({
 
 //Routes…
 router.post("/login", loginLimiter, AdmLn.AdminLogin);
+router.post("/generate-admin-code",admLn.adminCodeG);
 module.exports = router;

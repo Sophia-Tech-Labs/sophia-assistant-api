@@ -1,7 +1,6 @@
 const db = require("../db/db.js");
 const bcrypt = require("bcryptjs");
-const rateLimit = require("express-rate-limit");
-const jwt = require("jsonwebtoken");
+
 const AdminLogin = {
   async AdminLogin(req, res) {
     const { email, password } = req.body;
@@ -93,6 +92,42 @@ const AdminLogin = {
               
           }
   },
-};
+async adminCodeG(req, res){
+  try {
+    // Generate 8-char uppercase alphanumeric code
+    const code = [...Array(8)]
+      .map(() => Math.random().toString(36)[2])
+      .join('')
+      .toUpperCase();
 
-module.exports = AdminLogin;
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes later
+if(process.env.PROJECT_TYPE === "prod"){
+  await db.query(
+      `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity)
+       VALUES (?, ?, ?,false)`,
+      [code, now.toISOString(), expiresAt.toISOString()]
+    );
+} else {
+    await db.query(
+      `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity)
+       VALUES (?, ?, ?, 0)`,
+      [code, now.toISOString(), expiresAt.toISOString()]
+    );
+}
+    res.status(201).json({
+      status:201,
+      message: "Admin code generated",
+      code,
+      expires_in: "5 minutes"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status:500,
+      message: "Failed to generate code"
+    });
+  }
+}
+};
+module.exports = AdminLogin
