@@ -27,8 +27,7 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	name TEXT NOT NULL,
 	email TEXT NOT NULL,
 	password_hash TEXT NOT NULL,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	
 );` : `CREATE TABLE IF NOT EXISTS admins(
 	id SERIAL PRIMARY KEY,
@@ -39,7 +38,9 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	
 );`;
-
+const createAdminCodeSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admin_codes(	
+	
+)` : ``
 // Automatically run table setup
 (async () => {
   try {
