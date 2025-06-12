@@ -3,10 +3,43 @@ const bcrypt = require("bcryptjs");
 const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
+const path = require("path");
 const admCodeValidityTime = process.env.admCodeValidity || 300;
-const admCodeDeleteTime = process.env.admCodeDeleteTime|| 1000;
-const rawAdmCodes = fs.readFileSync("../adm/admCodes.json", "utf8");
-const adminCodes = JSON.parse(rawAdmCodes);
+const admCodeDeleteTime = process.env.admCodeDeleteTime || 1000;
+let doesFileExist;
+async function cJIIDNE() {
+  try {
+    doesFileExist =  fs.readFileSync("../adm/admCodes.json", "utf8");
+  
+  } catch (error) {
+    console.log(error)
+  }
+  if (!doesFileExist) {
+    
+    const admJsonPth = path.resolve(__dirname, "../adm/admCodes.json");
+    const iniVal = "[]";
+    fs.mkdir(path.dirname(admJsonPth), { recursive: true }, (error) => {
+      if (error) {
+        cJIIDNE();
+        return;
+      }
+    
+      fs.writeFile(admJsonPth, iniVal, (error) => {
+        if (error) {
+          console.log(error);
+          cJIIDNE();
+        } else {
+          return;
+        }
+      });
+    
+      return
+    });
+    }
+
+
+}
+
 const AdminLogin = {
   async AdminLogin(req, res) {
     const { email, password } = req.body;
@@ -104,6 +137,8 @@ const adminCode = {
   async adminCodeG(res) {
     
     try {
+      const rawAdmCodes = fs.readFileSync("../adm/admCodes.json", "utf8");
+      const adminCodes = JSON.parse(rawAdmCodes);
       const code = Math.floor(100000 + Math.random() * 900000);
       const creationTime = new Date();
       adminCodes.push({ admCode: code, creationTime: creationTime, validity: true })
@@ -176,4 +211,5 @@ for (let i = 0; i < admCodeArray.length; i++) {
   }
 }
   
-module.exports = AdminLogin;
+cJIIDNE()
+module.exports = { AdminLogin, adminCode};

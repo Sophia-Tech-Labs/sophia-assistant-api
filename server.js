@@ -45,7 +45,6 @@ setInterval(() => {
 }, 1000);
 
 const { close } = require('./db/db.js');
-const { AdminLogin } = require('./controllers/adminController.js');
 
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
