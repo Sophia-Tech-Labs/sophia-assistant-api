@@ -102,13 +102,19 @@ async adminCodeG(req, res){
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 5 minutes later
-
-    await db.query(
+if(process.env.PROJECT_TYPE === "prod"){
+  await db.query(
       `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity)
-       VALUES (?, ?, ?, 1)`,
+       VALUES (?, ?, ?, 0)`,
       [code, now.toISOString(), expiresAt.toISOString()]
     );
-
+} else {
+    await db.query(
+      `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity)
+       VALUES (?, ?, ?, 0)`,
+      [code, now.toISOString(), expiresAt.toISOString()]
+    );
+}
     res.status(201).json({
       status:201,
       message: "Admin code generated",
@@ -119,8 +125,7 @@ async adminCodeG(req, res){
   } catch (error) {
     res.status(500).json({
       status:500,
-      message: "Failed to generate code",
-      error
+      message: "Failed to generate code"
     });
   }
 }
