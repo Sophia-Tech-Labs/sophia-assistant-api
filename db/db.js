@@ -57,6 +57,7 @@ const createAdminCodeSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admin_codes(
   try {
     await db.query(createTableSQL);
     await db.query(createAdminSQLTable);
+    await db.query(createAdminCodeSQLTable);
     console.log(`[DB] Users table ready (${isDev ? 'SQLite' : 'PostgreSQL'})`);
   } catch (err) {
     console.error('[DB] Error creating table:', err);
