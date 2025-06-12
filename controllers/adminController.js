@@ -105,7 +105,7 @@ async adminCodeG(req, res){
 if(process.env.PROJECT_TYPE === "prod"){
   await db.query(
       `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity)
-       VALUES (?, ?, ?, 0)`,
+       VALUES (?, ?, ?,false)`,
       [code, now.toISOString(), expiresAt.toISOString()]
     );
 } else {
