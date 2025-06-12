@@ -4,7 +4,6 @@ const app = express();
 const AdmRoutes = require("./routes/authRoutes");
 const cors = require("cors");
 const path = require("path");
-const adm = require("../controllers/adminController");
 const supAdmRoutes = require('./routes/superAdminRoutes');
 const cookieParser = require('cookie-parser');
 app.use(express.json());
