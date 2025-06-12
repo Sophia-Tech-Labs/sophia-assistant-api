@@ -101,7 +101,7 @@ async adminCodeG(req, res){
       .toUpperCase();
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes later
+    const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 5 minutes later
 
     await db.query(
       `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity)
@@ -110,6 +110,7 @@ async adminCodeG(req, res){
     );
 
     res.status(201).json({
+      status:201,
       message: "Admin code generated",
       code,
       expires_in: "5 minutes"
@@ -117,10 +118,11 @@ async adminCodeG(req, res){
 
   } catch (error) {
     res.status(500).json({
+      status:500,
       message: "Failed to generate code",
       error
     });
   }
 }
 };
-module.exports = { AdminLogin, adminCode};
+module.exports = AdminLogin
