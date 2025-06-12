@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../controllers/authController")
 const AdmLn = require("../controllers/adminController");
+const superAdmFn = require("../controllers/superAdminController");
 const rateLimit = require("express-rate-limit");
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -14,4 +15,6 @@ const loginLimiter = rateLimit({
 //Routes…
 router.post("/login", loginLimiter, AdmLn.AdminLogin);
 router.post("/generate-admin-code",admLn.adminCodeG);
+router.get("/complete-signup/:token",superAdmFn.completeSignupG);
+router.post("/complete-signup/:token",superAdmFn.completeSignupP);
 module.exports = router;
