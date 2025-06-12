@@ -4,7 +4,7 @@ const app = express();
 const AdmRoutes = require("./routes/authRoutes");
 const cors = require("cors");
 const path = require("path");
-
+const adm = require("../controllers/adminController");
 const supAdmRoutes = require('./routes/superAdminRoutes');
 const cookieParser = require('cookie-parser');
 app.use(express.json());
@@ -39,8 +39,13 @@ app.listen(PORT, () => {
   console.log(`Sophia Assistant API running on port ${PORT}`);
 });
 
+//Checks For The Validity Of Admin Codes Every Second
+setInterval(() => {
+ adm.setValidity();
+}, 1000);
 
 const { close } = require('./db/db.js');
+const { AdminLogin } = require('./controllers/adminController.js');
 
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
