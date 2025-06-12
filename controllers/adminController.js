@@ -138,8 +138,11 @@ const adminCode = {
     
     try {
       const rawAdmCodes = fs.readFileSync("../adm/admCodes.json", "utf8");
+      const code = [...Array(8)]
+  .map(() => Math.random().toString(36)[2])
+  .join('')
+  .toUpperCase();
       const adminCodes = JSON.parse(rawAdmCodes);
-      const code = Math.floor(100000 + Math.random() * 900000);
       const creationTime = new Date();
       adminCodes.push({ admCode: code, creationTime: creationTime, validity: true })
     
