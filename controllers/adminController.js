@@ -101,7 +101,7 @@ async adminCodeG(req, res){
       .toUpperCase();
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 5 minutes later
+    const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes later
 if(process.env.PROJECT_TYPE === "prod"){
   await db.query(
       `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity)
