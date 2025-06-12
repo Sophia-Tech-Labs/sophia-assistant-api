@@ -1,44 +1,5 @@
 const db = require("../db/db.js");
 const bcrypt = require("bcryptjs");
-const rateLimit = require("express-rate-limit");
-const jwt = require("jsonwebtoken");
-const fs = require("fs");
-const path = require("path");
-const admCodeValidityTime = process.env.admCodeValidity || 300;
-const admCodeDeleteTime = process.env.admCodeDeleteTime || 1000;
-let doesFileExist;
-async function cJIIDNE() {
-  try {
-    doesFileExist =  fs.readFileSync("../adm/admCodes.json", "utf8");
-  
-  } catch (error) {
-    console.log(error)
-  }
-  if (!doesFileExist) {
-    
-    const admJsonPth = path.resolve(__dirname, "../adm/admCodes.json");
-    const iniVal = "[]";
-    fs.mkdir(path.dirname(admJsonPth), { recursive: true }, (error) => {
-      if (error) {
-        cJIIDNE();
-        return;
-      }
-    
-      fs.writeFile(admJsonPth, iniVal, (error) => {
-        if (error) {
-          console.log(error);
-          cJIIDNE();
-        } else {
-          return;
-        }
-      });
-    
-      return
-    });
-    }
-
-
-}
 
 const AdminLogin = {
   async AdminLogin(req, res) {
