@@ -29,7 +29,7 @@ app.use('/super-admin', supAdmRoutes);
 app.use("/admin", AdmRoutes);
 
 // Basic error handler
-app.use((err, req, res, next) => {//
+app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something broke!' });
 });
@@ -39,10 +39,7 @@ app.listen(PORT, () => {
   console.log(`Sophia Assistant API running on port ${PORT}`);
 });
 
-//Checks For The Validity Of Admin Codes Every Second
-setInterval(() => {
- adm.setValidity();
-}, 1000);
+
 
 const { close } = require('./db/db.js');
 
