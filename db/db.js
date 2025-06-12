@@ -25,17 +25,24 @@ const createTableSQL = isDev ? `CREATE TABLE IF NOT EXISTS super_admins (
 const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT NOT NULL,
-	email TEXT NOT NULL,
+	email TEXT NOT NULL UNIQUE,
 	password_hash TEXT NOT NULL,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	is_verified BOOLEAN DEFAULT 0,
+	signup_token TEXT,
+	token_expires DATETIME
 	
 );` : `CREATE TABLE IF NOT EXISTS admins(
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
-	email TEXT NOT NULL,
+	email TEXT NOT NULL UNIQUE,
 	password_hash TEXT NOT NULL,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	is_verified BOOLEAN DEFAULT FALSE,
+	signup_token TEXT,
+	token_expires TIMESTAMP
 	
 );`;
 const createAdminCodeSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admin_codes(	
