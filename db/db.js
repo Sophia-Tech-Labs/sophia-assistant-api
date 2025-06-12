@@ -39,8 +39,19 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	
 );`;
 const createAdminCodeSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admin_codes(	
-	
-)` : ``
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+ 	adm_codes TEXT NOT NULL,
+	creation_time TEXT NOT NULL,
+	expires_at TEXT NOT NULL,
+	validity BOOLEAN DEFAULT 1
+
+);` : `CREATE TABLE IF NOT EXISTS admin_codes(
+	id SERIAL PRIMARY KEY,
+	adm_codes TEXT NOT NULL,
+	creation_time TEXT NOT NULL,
+ 	expires_at TEXT NOT NULL,
+  	validity BOOLEAN DEFAULT TRUE
+);`;
 // Automatically run table setup
 (async () => {
   try {
