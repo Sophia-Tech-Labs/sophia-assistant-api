@@ -12,6 +12,9 @@ const loginLimiter = rateLimit({
 });
 router.post("/signup",loginLimiter,supAdmFn.superAdminSignup);
 router.post("/login",loginLimiter,supAdmFn.superAdminLogin);
+router.post("/invite-admin",superAdminMd.verifySuperAdmin,supAdmFn.inviteAdmin);
+router.delete("/remove-admin/:id",superAdminMd.verifySuperAdmin,supAdmFn.removeAdmin);
+router.get("/view-all-admins",superAdminMd.verifySuperAdmin,supAdmFn.viewAllAdmins);
 router.get("/protect",superAdminMd.verifySuperAdmin,(req,res)=>{
 	res.send(`
 	<body>

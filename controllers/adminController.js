@@ -117,9 +117,10 @@ if(process.env.PROJECT_TYPE === "prod"){
 }
     res.status(201).json({
       status:201,
-      message: "Admin code generated",
       code,
-      expires_in: "5 minutes"
+       expires_in: "5 minutes",
+      message: "Admin code generated"
+     
     });
 
   } catch (error) {
