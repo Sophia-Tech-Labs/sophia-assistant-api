@@ -177,6 +177,7 @@ async completeSignupG(req, res){
 	
 	    // Check if expired
 	    if (new Date(user.token_expires) < now) {
+	   // await db.query("DELETE FROM admins WHERE signup_token = $1",[token])	
 	      return res.status(410).send('Signup link has expired.');
 	    }
 	
@@ -292,10 +293,50 @@ async completeSignupP (req, res){
   }
 },
 	async removeAdmin(req,res){
+		const id  = req.params.id;
 		
+		if(!id){
+			return res.status(400).json({
+				status:400,
+				error:"Id is required"
+			})
+			}
+			const results = await db.query("SELECT * FROM admins WHERE id = $1",[id])
+			if(results.length === 0){ 
+				res.status(404).json({
+					status:404,
+					error:`User with id ${id} not Found`
+				})
+			}
+			try{
+				await db.query("DELETE FROM admins WHERE ID = $1",[id]);
+				res.status(200).json({
+					status:200,
+					message:`Successfully Deleted user with ID ${id}`
+				}) 
+			} catch(error){
+				res.status(500).json({
+					status:500,
+					error:"Something went wrong"
+				})
+			}
 	},
 
-	async viewAdmins(req,res){
+	async viewAllAdmins(req,res){
+		try{
+			const results = await db.query("SELECT id,name,email,is_verified,created_at FROM admins");
+			res.json({
+				status:200,
+				results
+			})
+		} catch(error){
+			res.status(500).json({
+				status:500,
+				error:"Something went Wrong"
+			})
+		} 
+	},
+	async viewOneAdmin(req,res){
 		
 	}
 }

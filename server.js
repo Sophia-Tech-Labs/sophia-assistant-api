@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const AdmRoutes = require("./routes/authRoutes");
+const AdmRoutes = require("./routes/adminRoutes");
+const authRoutes = require("./routes/authRoutes");
 const cors = require("cors");
 const path = require("path");
 const supAdmRoutes = require('./routes/superAdminRoutes');
@@ -35,6 +36,7 @@ app.get('/health', (req, res) => {
 // Mount auth routes
 app.use('/super-admin', supAdmRoutes);
 app.use("/admin", AdmRoutes);
+app.use("/auth",authRoutes);
 
 // Basic error handler
 app.use((err, req, res, next) => {
