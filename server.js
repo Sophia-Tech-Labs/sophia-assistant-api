@@ -23,8 +23,11 @@ app.get('/login',(req, res) =>{
 app.get('/signup',(req, res) =>{
 	res.sendFile(path.join(__dirname,"public","super-admin-signup.html"));
 })
-app.get('/test',(req, res) =>{
+app.get('/add-admin',(req, res) =>{
 	res.sendFile(path.join(__dirname,"public","test.html"));
+})
+app.get('/login-admin',(req, res) =>{
+	res.sendFile(path.join(__dirname,"public","admin-login.html"));
 })
 
 

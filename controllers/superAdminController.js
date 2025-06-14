@@ -4,15 +4,15 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const superAdminFunctions = {
 	async superAdminSignup(req,res){
-		const { name,email,password,apikey } = req.body;
-		if(!name || !email ||  !password || !apikey){
-		
+	console.log(req.body)
+		const { name,email,password,adminkey } = req.body;
+		if(!name || !email ||  !password || !adminkey){
 		return 	res.status(400).json({
 				status:400,
-				error: "All field are required(name,email,password,apikey)"
-			})
+				error: "All field are required"
+			});
 		}
-		if(apikey !== process.env.API_KEY){
+		if(adminkey !== process.env.API_KEY){
 			res.status(401).json({
 				status:401,
 				error: "Invalid API key. Access denied."
