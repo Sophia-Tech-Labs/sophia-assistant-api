@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const superAdminFunctions = {
 	async superAdminSignup(req,res){
-	console.log(req.body)
 		const { name,email,password,adminkey } = req.body;
 		if(!name || !email ||  !password || !adminkey){
 		return 	res.status(400).json({
