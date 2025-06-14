@@ -30,6 +30,30 @@ const authController = {
 						})
 		}
 	},
+	async checkToken(req,res){
+		const token = req.cookies.accessToken;
+		if(!token){
+			res.status(400).json({
+				status:400,
+				error:"No Access Token, Access Denied"
+			})
+			return;
+		}
+		try{
+			const decoded = jwt.verify(token,process.env.JWT_SECRET);
+			res.status(200).json({
+				status:200,
+				message:"Token Verified"
+			})
+		} catch(error){
+			res.status(403).json({
+				status:403,
+				error:"Token Invalid or Expired"
+			})
+		}
+
+
+	}
 
 }
 module.exports = authController;

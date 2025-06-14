@@ -52,11 +52,31 @@ const createAdminCodeSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admin_codes(
  	expires_at TEXT NOT NULL,
   	validity BOOLEAN DEFAULT TRUE
 );`;
+
+const createUserSQLTable = isDev ? ` CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  main_phone TEXT NOT NULL,
+  assistant_phone TEXT NOT NULL,
+  admin_code TEXT NOT NULL
+);` : `CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  main_phone TEXT NOT NULL,
+  assistant_phone TEXT NOT NULL,
+  admin_code TEXT NOT NULL
+);`
+
 // Automatically run table setup
 (async () => {
   try {
     await db.query(createTableSQL);
     await db.query(createAdminSQLTable);
+    await db.query(createUserSQLTable);
     await db.query(createAdminCodeSQLTable);
     console.log(`[DB] Users table ready (${isDev ? 'SQLite' : 'PostgreSQL'})`);
   } catch (err) {

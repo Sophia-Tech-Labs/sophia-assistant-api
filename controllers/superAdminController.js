@@ -4,15 +4,14 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const superAdminFunctions = {
 	async superAdminSignup(req,res){
-		const { name,email,password,apikey } = req.body;
-		if(!name || !email ||  !password || !apikey){
-		
+		const { name,email,password,adminkey } = req.body;
+		if(!name || !email ||  !password || !adminkey){
 		return 	res.status(400).json({
 				status:400,
-				error: "All field are required(name,email,password,apikey)"
-			})
+				error: "All field are required"
+			});
 		}
-		if(apikey !== process.env.API_KEY){
+		if(adminkey !== process.env.API_KEY){
 			res.status(401).json({
 				status:401,
 				error: "Invalid API key. Access denied."
@@ -307,6 +306,7 @@ async completeSignupP (req, res){
 					status:404,
 					error:`User with id ${id} not Found`
 				})
+				return;
 			}
 			try{
 				await db.query("DELETE FROM admins WHERE ID = $1",[id]);
@@ -325,6 +325,13 @@ async completeSignupP (req, res){
 	async viewAllAdmins(req,res){
 		try{
 			const results = await db.query("SELECT id,name,email,is_verified,created_at FROM admins");
+			if(results.length=== 0){
+				res.status(404).json({
+					status:404,
+					error:"Users Not Found"
+				})
+				return;
+			}
 			res.json({
 				status:200,
 				results
@@ -337,7 +344,31 @@ async completeSignupP (req, res){
 		} 
 	},
 	async viewOneAdmin(req,res){
-		
+	const {id} = req.params;
+	if(!id){
+		return res.status(400).json({
+			status:400,
+			error:"ID is required"
+		})
+	}
+		const results = await db.query("SELECT id,name,email,created_at,signup_token,is_verified FROM admins WHERE id = $1",[id]);
+		if(results.length === 0){
+			return res.status(404).json({
+				status:404,
+				error:`User with ID ${id} Not Found`  
+			})
+		}
+		try{
+			res.status(200).json({
+				status:200,
+				results
+			})
+		} catch(error){
+			res.status(500).json({
+						status:500,
+						error:"Something went Wrong"
+						})
+		}
 	}
 }
 module.exports = superAdminFunctions;

@@ -1,5 +1,6 @@
 const db = require("../db/db.js");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const AdminLogin = {
   async AdminLogin(req, res) {
@@ -85,6 +86,7 @@ const AdminLogin = {
 
       return;
     } catch (error) {
+    console.log(error);
                 res.status(500).json({
                   status: 500,
                   error: "Something went wrong",
