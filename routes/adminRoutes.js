@@ -17,7 +17,7 @@ const loginLimiter = rateLimit({
 //Routes…
 router.post("/forgot-password", loginLimiter, adminForgotPassword);
 router.post("/reset-password", loginLimiter, adminResetPassword);
-router.post("/generate-admin-code",/*middleware.verifyAdmin*/AdmLn.adminCodeG);
+router.post("/generate-admin-code",middleware.verifyAdmin,AdmLn.adminCodeG);
 router.get("/complete-signup/:token",superAdmFn.completeSignupG);
 router.post("/complete-signup/:token",superAdmFn.completeSignupP);
 module.exports = router;
