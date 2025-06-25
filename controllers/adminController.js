@@ -1,5 +1,6 @@
 const db = require("../db/db.js");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const AdminLogin = {
   async AdminLogin(req, res) {
@@ -11,8 +12,6 @@ const AdminLogin = {
       });
        
     }
-        
-
     const user = await db.query("SELECT * FROM admins WHERE email = $1", [email]);
     if (!user[0]) {
       res.status(401).json({
@@ -117,9 +116,10 @@ if(process.env.PROJECT_TYPE === "prod"){
 }
     res.status(201).json({
       status:201,
-      message: "Admin code generated",
       code,
-      expires_in: "5 minutes"
+       expires_in: "5 minutes",
+      message: "Admin code generated"
+     
     });
 
   } catch (error) {

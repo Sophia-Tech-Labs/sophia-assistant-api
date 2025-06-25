@@ -1,10 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const AdmRoutes = require("./routes/authRoutes");
+const AdmRoutes = require("./routes/adminRoutes");
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 const cors = require("cors");
 const path = require("path");
-const adm = require("../controllers/adminController");
 const supAdmRoutes = require('./routes/superAdminRoutes');
 const cookieParser = require('cookie-parser');
 app.use(express.json());
@@ -19,6 +20,20 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/login',(req, res) =>{
 	res.sendFile(path.join(__dirname,"public","super-admin-login.html"));
 })
+app.get('/generate-admin-code',(req, res) =>{
+	res.sendFile(path.join(__dirname,"public","gen-adm-code.html"));
+})
+
+app.get('/signup',(req, res) =>{
+	res.sendFile(path.join(__dirname,"public","super-admin-signup.html"));
+})
+app.get('/add-admin',(req, res) =>{
+	res.sendFile(path.join(__dirname,"public","test.html"));
+})
+app.get('/login-admin',(req, res) =>{
+	res.sendFile(path.join(__dirname,"public","admin-login.html"));
+})
+
 
 app.get('/signup',(req, res) =>{
 	res.sendFile(path.join(__dirname,"public","super-admin-signup.html"));
@@ -36,6 +51,8 @@ app.get('/health', (req, res) => {
 // Mount auth routes
 app.use('/super-admin', supAdmRoutes);
 app.use("/admin", AdmRoutes);
+app.use("/auth",authRoutes);
+app.use("/user",userRoutes);
 
 // Basic error handler
 app.use((err, req, res, next) => {
