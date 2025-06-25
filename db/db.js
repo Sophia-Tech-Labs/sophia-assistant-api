@@ -86,12 +86,12 @@ const createUserSQLTable = isDev ? ` CREATE TABLE IF NOT EXISTS users (
 
 const createSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL UNIQUE,
   creds TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );` : `CREATE TABLE IF NOT EXISTS sessions (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL UNIQUE,
   creds JSONB NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );`;
