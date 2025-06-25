@@ -36,6 +36,13 @@ const userSignup = async (req, res) => {
    		error:"Admin Code expired"
    	})
    }
+   if(adminCodeData.validity === false){ 
+   await db.query("DELETE FROM admin_codes WHERE adm_codes = $1",[adminCode])
+   	   	return res.status(403).json({
+   	   		status:403,
+   	   		error:"Admin Code expird"
+   	   	})
+   	   }
    const hashedPassword = await bcrypt.hash(password,10);
     const sqlQuery = `INSERT INTO users (name, email,password, main_phone, assistant_phone, admin_code) 
                       VALUES ($1, $2, $3, $4, $5, $6)`;
@@ -46,7 +53,9 @@ const userSignup = async (req, res) => {
       status: 201,
       message: "User signed up successfully"
     });
-  } catch (error) {
+     await db.query("DELETE FROM admin_codes WHERE adm_codes = $1",[adminCode])
+    }
+  catch (error) {
     console.error(error);
     res.status(500).json({ status: 500, message: "Something went wrong", error: error.message });
   }
