@@ -79,7 +79,7 @@ const createUserSQLTable = isDev ? ` CREATE TABLE IF NOT EXISTS users (
   reset_token TEXT,
   reset_token_expires TEXT,
   is_linked BOOLEAN DEFAULT 0,
-  api_key TEXT UNIQUE,
+  api_key TEXT UNIQUE
   
 );` : `CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -92,7 +92,7 @@ const createUserSQLTable = isDev ? ` CREATE TABLE IF NOT EXISTS users (
   reset_token TEXT,
   reset_token_expires TEXT,
   is_linked BOOLEAN DEFAULT FALSE,
-  api_key TEXT UNIQUE,
+  api_key TEXT UNIQUE
 );`;
 
 const createSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS sessions (
