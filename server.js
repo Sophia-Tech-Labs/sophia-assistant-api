@@ -17,30 +17,6 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: true }));
-app.get('/login',(req, res) =>{
-	res.sendFile(path.join(__dirname,"public","super-admin-login.html"));
-})
-app.get('/generate-admin-code',(req, res) =>{
-	res.sendFile(path.join(__dirname,"public","gen-adm-code.html"));
-})
-
-app.get('/signup',(req, res) =>{
-	res.sendFile(path.join(__dirname,"public","super-admin-signup.html"));
-})
-app.get('/add-admin',(req, res) =>{
-	res.sendFile(path.join(__dirname,"public","test.html"));
-})
-app.get('/login-admin',(req, res) =>{
-	res.sendFile(path.join(__dirname,"public","admin-login.html"));
-})
-
-
-app.get('/signup',(req, res) =>{
-	res.sendFile(path.join(__dirname,"public","super-admin-signup.html"));
-})
-app.get('/test',(req, res) =>{
-	res.sendFile(path.join(__dirname,"public","test.html"));
-})
 
 
 app.get('/health', (req, res) => {
