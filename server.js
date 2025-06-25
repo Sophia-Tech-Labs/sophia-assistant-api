@@ -20,6 +20,9 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/login',(req, res) =>{
 	res.sendFile(path.join(__dirname,"public","super-admin-login.html"));
 })
+app.get('/generate-admin-code',(req, res) =>{
+	res.sendFile(path.join(__dirname,"public","gen-adm-code.html"));
+})
 
 app.get('/signup',(req, res) =>{
 	res.sendFile(path.join(__dirname,"public","super-admin-signup.html"));

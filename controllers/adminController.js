@@ -12,8 +12,6 @@ const AdminLogin = {
       });
        
     }
-        
-
     const user = await db.query("SELECT * FROM admins WHERE email = $1", [email]);
     if (!user[0]) {
       res.status(401).json({
@@ -86,7 +84,6 @@ const AdminLogin = {
 
       return;
     } catch (error) {
-    console.log(error);
                 res.status(500).json({
                   status: 500,
                   error: "Something went wrong",

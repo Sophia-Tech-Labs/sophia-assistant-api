@@ -53,6 +53,19 @@ const authController = {
 		}
 
 
+	},
+	async logOut(req, res){
+	  res.clearCookie('accessToken', {
+	    httpOnly: true,
+	    sameSite: 'lax',
+	    secure: true,
+	  });
+	  res.clearCookie('refreshToken', {
+	    httpOnly: true,
+	    sameSite: 'lax',
+	    secure: true,
+	  });
+	  res.status(200).json({ message: 'Logged out successfully' });
 	}
 
 }
