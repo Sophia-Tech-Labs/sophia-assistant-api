@@ -48,7 +48,7 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	is_verified BOOLEAN DEFAULT FALSE,
 	signup_token TEXT,
-	token_expires TIMESTAMP
+	token_expires TIMESTAMP,
 	 reset_token TEXT,
   reset_token_expires TEXT
 	
