@@ -5,6 +5,12 @@ const devPath = path.join(__dirname, 'dev.js');
 const db = fs.existsSync(devPath) ? require('./dev') : require('./prod');
 
 const isDev = fs.existsSync(devPath);
+async function test(){
+if(isDev){
+await db.query("PRAGMA foreign_keys = ON;")
+}
+}
+test()
 const createTableSQL = isDev ? `CREATE TABLE IF NOT EXISTS super_admins (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
@@ -35,7 +41,6 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	is_verified BOOLEAN DEFAULT 0,
 	signup_token TEXT,
 	token_expires DATETIME,
-	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	 reset_token TEXT,
   reset_token_expires TEXT
 	

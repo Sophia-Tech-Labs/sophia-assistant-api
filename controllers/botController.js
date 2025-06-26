@@ -2,6 +2,7 @@ const pino = require("pino");
 const { default: makeWASocket,DisconnectReason, delay,Browsers, makeCacheableSignalKeyStore } = require("baileys");
 const { useSQLAuthState } = require("../lib/auth");
 const NodeCache = require('node-cache');
+const db = require("../db/db");
 const msgRetryCounterCache = new NodeCache();
 async function pairCodeG(req,res){
 	const num = req.query.number;
@@ -39,22 +40,25 @@ async function pairCodeG(req,res){
 		        sock.ev.on("connection.update", async(update)=>{
 		        	const { connection, lastDisconnect } = update;
 		        	if(connection === "open"){
-		        		console.log("Successfully connected");
-		        		await sock.sendMessage(sock.user.id,{ text:"hello" });
+		        	await delay(5000)
+		        		await sock.end()
 		        	}
 		        	else if(connection === "close"){
 		        		const reason = lastDisconnect?.error?.output?.statusCode;
-		        		reconn(reason);
+		        		await reconn(reason);
 		        	}
 		        })
 
-		        function reconn(reason) { 
+		       async  function reconn(reason) { 
 		            if ([DisconnectReason.connectionLost, DisconnectReason.connectionClosed, DisconnectReason.restartRequired].includes(reason)) {
 		                console.log('Connection lost, reconnecting...');
 		                initializePairingSession();
 		            } else {
 		                console.log(`Disconnected! reason: ${reason}`);
-		                sock.end();
+		                const userID = await db.query("SELECT id FROM users WHERE email = $1",[email])
+		                await db.query("DELETE FROM sessions WHERE user_id = $1",[userID])
+		                
+		                await sock.end();
 		            }
 		        }
 	}
