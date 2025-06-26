@@ -15,10 +15,7 @@ async function pairCodeG(req,res){
 	const email = "ayanokoji2306@gmail.com"
 		const { state,saveCreds } = await useSQLAuthState(email);
 		const sock = makeWASocket({
-		        auth:  {
-		            creds: state.creds,
-		            keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' }).child({ level: 'fatal' }))
-		        },
+		        auth:state,
 		         //  printQRInTerminal: false,
 		        logger: pino({ level: 'debug' }).child({ level: 'fatal' }),
 		        browser: Browsers.macOS("Safari"), //check docs for more custom options
