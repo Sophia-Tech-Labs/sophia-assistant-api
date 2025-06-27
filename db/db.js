@@ -1,3 +1,4 @@
+
 const fs = require('fs');
 const path = require('path');
 
@@ -122,7 +123,7 @@ const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
 
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
-);` : `CREATE TABLE keys (
+);` : `CREATE TABLE keys IF NOT EXISTS (
   id SERIAL PRIMARY KEY,
   category TEXT NOT NULL,
   key_id TEXT NOT NULL,

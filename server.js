@@ -17,7 +17,7 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: true }));
-
+app.set('trust proxy', true);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'API is running' });
