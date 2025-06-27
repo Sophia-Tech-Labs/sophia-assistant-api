@@ -123,7 +123,7 @@ const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
 
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
-);` : `CREATE TABLE keys IF NOT EXISTS (
+);` : `CREATE TABLE IF NOT EXISTS keys (
   id SERIAL PRIMARY KEY,
   category TEXT NOT NULL,
   key_id TEXT NOT NULL,
