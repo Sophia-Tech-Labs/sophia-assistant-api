@@ -1,4 +1,4 @@
-const authController = {
+	const authController = {
 	async refreshToken(req,res){
 		const refreshToken = req.cookies.refreshToken;
 		if(!refreshToken){
@@ -43,6 +43,7 @@ const authController = {
 			const decoded = jwt.verify(token,process.env.JWT_SECRET);
 			res.status(200).json({
 				status:200,
+				role:decoded.role
 				message:"Token Verified"
 			})
 		} catch(error){
