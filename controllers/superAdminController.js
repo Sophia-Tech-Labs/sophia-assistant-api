@@ -82,14 +82,14 @@ const superAdminFunctions = {
 		res.cookie('accessToken', accessToken, {
 		      httpOnly: true,         // 👉 Client JS can't access it
 		      secure: bool,          // true in production (with HTTPS)
-		      sameSite: 'lax',        // Can be 'strict' | 'lax' | 'none'
+		      sameSite: 'none',        // Can be 'strict' | 'lax' | 'none'
 		      maxAge: 15 * 60 * 1000  // 15 minutes
 		    });
 		
 		    res.cookie('refreshToken', refreshToken, {
 		      httpOnly: true,
 		      secure: bool,
-		      sameSite: 'lax',
+		      sameSite: 'none',
 		      maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
 		    });
 
@@ -106,7 +106,6 @@ const superAdminFunctions = {
 		res.status(500).json({
 			status: 500,
 			error: "Something went wrong",
-			codeError: error.message
 		 });
 		}
 	},
