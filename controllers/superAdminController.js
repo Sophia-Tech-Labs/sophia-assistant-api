@@ -1,3 +1,4 @@
+require("dotenv").config();
 const db = require("../db/db.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -105,8 +106,8 @@ const superAdminFunctions = {
 		} catch(error){
 		res.status(500).json({
 			status: 500,
-			message: "Something went wrong",
-			error: error.message,
+			error: "Something went wrong",
+			codeError: error.message
 		 });
 		}
 	},

@@ -23,6 +23,10 @@
 		              sameSite: 'lax',  
 		              maxAge: 15 * 60 * 1000
 		            });
+		            res.status(200).json({
+		            	status:200,
+		            	role:decoded.role
+		            })
 		} catch (error){
 			res.status(403).json({
 							status:403,
