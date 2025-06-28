@@ -47,7 +47,7 @@
 			const decoded = jwt.verify(token,process.env.JWT_SECRET);
 			res.status(200).json({
 				status:200,
-				role:decoded.role
+				role:decoded.role,
 				message:"Token Verified"
 			})
 		} catch(error){
