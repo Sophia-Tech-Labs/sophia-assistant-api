@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 	const authController = {
 	async refreshToken(req,res){
 		const refreshToken = req.cookies.refreshToken;
