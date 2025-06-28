@@ -83,14 +83,16 @@ const superAdminFunctions = {
 		      httpOnly: true,         // 👉 Client JS can't access it
 		      secure: bool,          // true in production (with HTTPS)
 		      sameSite: 'none',        // Can be 'strict' | 'lax' | 'none'
-		      maxAge: 15 * 60 * 1000  // 15 minutes
+		      maxAge: 15 * 60 * 1000,  // 15 minutes
+		      path:"/"
 		    });
 		
 		    res.cookie('refreshToken', refreshToken, {
 		      httpOnly: true,
 		      secure: bool,
 		      sameSite: 'none',
-		      maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+		      maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
+		      path: "/"
 		    });
 
 		res.json({
