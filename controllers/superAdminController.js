@@ -73,12 +73,8 @@ const superAdminFunctions = {
 		const accessToken = jwt.sign({ id:infoQuery[0].id,name:infoQuery[0].name, email:infoQuery[0].email,role:"super-admin" },process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRIES_IN || "15m" });
 		const refreshToken = jwt.sign({ id:infoQuery[0].id,name:infoQuery[0].name, email:infoQuery[0].email,role:"super-admin" },process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRIES_IN || "7d" });
 		
-		let bool;
-		if(process.env.PROJECT_TYPE === "prod"){
-		bool = true;
-		} else{
-		bool = false;
-		}
+		let bool = process.env.PROJECT_TYPE === "prod";
+		
 		res.cookie('accessToken', accessToken, {
 		      httpOnly: true,         // 👉 Client JS can't access it
 		      secure: bool,          // true in production (with HTTPS)
