@@ -11,17 +11,20 @@ const cookieParser = require('cookie-parser');
 app.use(express.json());
 app.use(cookieParser());
 const allowedOrigins = [
-  ,
-  process.env.FRONTEND_URL ?? "",
+  "http://localhost:3000", // for local testing
+  "https://sophia-assistant-frontend.vercel.app" // 🔥 your Vercel frontend
 ];
-app.use(
-  cors({
-    origin:["https://sophia-assistant-frontend.vercel.app","http://localhost:3000"]
-    credentials: true, 
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"]
-  })
-);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS: " + origin));
+    }
+  },
+  credentials: true
+}));
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);
 
