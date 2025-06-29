@@ -17,7 +17,9 @@ const allowedOrigins = [
 app.use(
   cors({
     origin:"http://localhost:3000", // reflect request origin
-    credentials: true, // allow cookies/auth headers
+    credentials: true, 
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 app.use(express.urlencoded({ extended: true }));
