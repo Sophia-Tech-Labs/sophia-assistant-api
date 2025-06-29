@@ -10,9 +10,13 @@ const supAdmRoutes = require('./routes/superAdminRoutes');
 const cookieParser = require('cookie-parser');
 app.use(express.json());
 app.use(cookieParser());
+const allowedOrigins = [
+  ,
+  process.env.FRONTEND_URL ?? "",
+];
 app.use(
   cors({
-    origin: true, // reflect request origin
+    origin:"http://localhost:3000", // reflect request origin
     credentials: true, // allow cookies/auth headers
   })
 );
