@@ -81,7 +81,7 @@ const superAdminFunctions = {
 		      sameSite: 'none',        // Can be 'strict' | 'lax' | 'none'
 		      maxAge: 15 * 60 * 1000,  // 15 minutes
 		      path:"/",
-		      domain: "https://sophia-assistant-frontend.vercel.app"
+		      domain: "sophia-assistant-frontend.vercel.app"
 		    });
 		
 		    res.cookie('refreshToken', refreshToken, {
@@ -90,7 +90,7 @@ const superAdminFunctions = {
 		      sameSite: 'none',
 		      maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
 		      path: "/",
-		      domain: "https://sophia-assistant-frontend.vercel.app/failed"
+		      domain: "sophia-assistant-frontend.vercel.app/failed"
 		    });
 
 		res.json({
@@ -105,7 +105,8 @@ const superAdminFunctions = {
 		} catch(error){
 		res.status(500).json({
 			status: 500,
-			error: "Something went wrong",
+			erro: "Something went wrong",
+			error:error.message
 		 });
 		}
 	},
