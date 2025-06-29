@@ -81,7 +81,6 @@ const superAdminFunctions = {
 		      sameSite: 'none',        // Can be 'strict' | 'lax' | 'none'
 		      maxAge: 15 * 60 * 1000,  // 15 minutes
 		      path:"/",
-		      domain: "sophia-assistant-frontend.vercel.app"
 		    });
 		
 		    res.cookie('refreshToken', refreshToken, {
@@ -90,7 +89,6 @@ const superAdminFunctions = {
 		      sameSite: 'none',
 		      maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
 		      path: "/",
-		      domain: "sophia-assistant-frontend.vercel.app/failed"
 		    });
 
 		res.json({
