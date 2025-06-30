@@ -43,70 +43,57 @@ const superAdminFunctions = {
 			      });
 		}
 	},
-	async superAdminLogin(req,res){
-		const { email, password } = req.body;
-		if(!email || !password){
-	 return res.status(400).json({
-				status:400,
-				error: "All field are required(email,password)"
-			})
-		}
-		const emailQuery = await db.query(`SELECT email FROM super_admins WHERE email = $1`,[email])
-		if(emailQuery.length === 0){
-			res.status(401).json({
-				status:401,
-				error:"Invalid email or password"
-			})
-			return;
-		}
-		const passQuery = await db.query(`SELECT password_hash FROM super_admins WHERE email = $1`,[email]);
-		const isMatch = await bcrypt.compare(password,passQuery[0].password_hash)  
-		if(!isMatch){
-			res.status(401).json({
-					status:401,
-					error:"Invalid email or password"
-				})
-			return;
-		}
-		try{
-		const infoQuery = await db.query("SELECT * FROM super_admins WHERE email = $1",[email])
-		const accessToken = jwt.sign({ id:infoQuery[0].id,name:infoQuery[0].name, email:infoQuery[0].email,role:"super-admin" },process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRIES_IN || "15m" });
-		const refreshToken = jwt.sign({ id:infoQuery[0].id,name:infoQuery[0].name, email:infoQuery[0].email,role:"super-admin" },process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRIES_IN || "7d" });
-		
-		let bool = process.env.PROJECT_TYPE === "prod";
-		
-		res.cookie('accessToken', accessToken, {
-		      httpOnly: true,         // 👉 Client JS can't access it
-		      secure: bool,          // true in production (with HTTPS)
-		      sameSite: 'none',        // Can be 'strict' | 'lax' | 'none'
-		      maxAge: 15 * 60 * 1000,  // 15 minutes
-		      path:"/",
-		    });
-		
-		    res.cookie('refreshToken', refreshToken, {
-		      httpOnly: true,
-		      secure: bool,
-		      sameSite: 'none',
-		      maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
-		      path: "/",
-		    });
-
-		res.json({
-			status:200,
-			message:"logged In successfully",
-			user: {
-			    id: infoQuery[0].id,
-			    name: infoQuery[0].name,
-			    email: infoQuery[0].email
-			  }
-		})
-		} catch(error){
-		res.status(500).json({
-			status: 500,
-			erro: "Something went wrong",
-			error:error.message
-		 });
-		}
+	async superAdminLogin(req, res) {
+	  const { email, password } = req.body;
+	  if (!email || !password) {
+	    return res.status(400).json({
+	      status: 400,
+	      error: "All field are required(email,password)",
+	    });
+	  }
+	  const emailQuery = await db.query(`SELECT email FROM super_admins WHERE email = $1`, [email]);
+	  if (emailQuery.length === 0) {
+	    return res.status(401).json({
+	      status: 401,
+	      error: "Invalid email or password",
+	    });
+	  }
+	
+	  const passQuery = await db.query(`SELECT password_hash FROM super_admins WHERE email = $1`, [email]);
+	  const isMatch = await bcrypt.compare(password, passQuery[0].password_hash);
+	  if (!isMatch) {
+	    return res.status(401).json({
+	      status: 401,
+	      error: "Invalid email or password",
+	    });
+	  }
+	
+	  try {
+	    const infoQuery = await db.query("SELECT * FROM super_admins WHERE email = $1", [email]);
+	    const payload = {
+	      id: infoQuery[0].id,
+	      name: infoQuery[0].name,
+	      email: infoQuery[0].email,
+	      role: "super-admin",
+	    };
+	
+	    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "15m" });
+	    const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
+	
+	    res.json({
+	      status: 200,
+	      message: "Logged In successfully",
+	      accessToken,
+	      refreshToken,
+	      user: payload,
+	    });
+	  } catch (error) {
+	    res.status(500).json({
+	      status: 500,
+	      error: "Something went wrong",
+	      message: error.message,
+	    });
+	  }
 	},
 	async inviteAdmin(req,res){
 		const { name,email } = req.body;

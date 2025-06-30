@@ -3,94 +3,42 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const AdminLogin = {
-  async AdminLogin(req, res) {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({
-        status: 400,
-        error: "All field are required(email,password)",
-      });
-       
-    }
-    const user = await db.query("SELECT * FROM admins WHERE email = $1", [email]);
-    if (!user[0]) {
-      res.status(401).json({
-        status: 401,
-        error: "Invalid email or password",
-      });
-      return;
-    }
-    const hashedPassword = user[0].password_hash;
-    const isPasswordValid = bcrypt.compareSync(
-      password,
-      hashedPassword
-    );
-    if (!isPasswordValid) {
-      res.status(401).json({
-        status: 401,
-        error: "Invalid email or password",
-      });
-      return;
-    }
-    try {
-      const accessToken = jwt.sign(
-        {
-          id: user[0].id,
-          name: user[0].name,
-          email: user[0].email,
-          role: "admin",
-        },
-        process.env.JWT_SECRET||"abc",
-        { expiresIn: process.env.JWT_EXPIRIES_IN || "15m" }
-      );
-      const refreshToken = jwt.sign(
-        {
-          id: user[0].id,
-          name: user[0].name,
-          email: user[0].email,
-          role: "admin",
-        },
-        process.env.JWT_SECRET||"abc",
-        { expiresIn: process.env.JWT_EXPIRIES_IN || "7d" }
-      );
-      let bool;
-      if (process.env.PROJECT_TYPE === "prod") {
-        bool = true;
-      } else {
-        bool = false;
-      }
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true, // 👉 Client JS can't access it
-        secure: bool || true, // true in production (with HTTPS)
-        sameSite: "lax", // Can be 'strict' | 'lax' | 'none'
-        maxAge: 15 * 60 * 1000, // 15 minutes
-      });
-
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: bool || true,
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
-      res.json({
-        status: 200,
-        message: "logged In successfully",
-        user: {
-          id: user[0].id,
-          name: user[0].name,
-          email: user[0].email,
-        },
-      });
-
-      return;
-    } catch (error) {
-                res.status(500).json({
-                  status: 500,
-                  error: "Something went wrong",
-                });
-              
-          }
-  },
+	async AdminLogin(req, res) {
+	  const { email, password } = req.body;
+	  if (!email || !password) {
+	    return res.status(400).json({ status: 400, error: "All fields are required" });
+	  }
+	  const user = await db.query("SELECT * FROM admins WHERE email = $1", [email]);
+	  if (!user[0]) {
+	    return res.status(401).json({ status: 401, error: "Invalid email or password" });
+	  }
+	
+	  const isMatch = await bcrypt.compare(password, user[0].password_hash);
+	  if (!isMatch) {
+	    return res.status(401).json({ status: 401, error: "Invalid email or password" });
+	  }
+	
+	  try {
+	    const payload = {
+	      id: user[0].id,
+	      name: user[0].name,
+	      email: user[0].email,
+	      role: "admin",
+	    };
+	    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "15m" });
+	    const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
+	
+	    res.json({
+	      status: 200,
+	      message: "Logged In successfully",
+	      accessToken,
+	      refreshToken,
+	      user: payload,
+	    });
+	  } catch (error) {
+	    res.status(500).json({ status: 500, error: "Something went wrong" });
+	  }
+	},
 async adminCodeG(req, res){
   try {
     // Generate 8-char uppercase alphanumeric code
