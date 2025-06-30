@@ -59,22 +59,29 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
   reset_token_expires TEXT
 	
 );`;
-const createAdminCodeSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admin_codes(	
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
- 	adm_codes TEXT NOT NULL,
-	creation_time TEXT NOT NULL,
-	expires_at TEXT NOT NULL,
-	validity BOOLEAN DEFAULT 1
 
-);` : `CREATE TABLE IF NOT EXISTS admin_codes(
-	id SERIAL PRIMARY KEY,
-	adm_codes TEXT NOT NULL,
-	creation_time TEXT NOT NULL,
- 	expires_at TEXT NOT NULL,
-  	validity BOOLEAN DEFAULT TRUE
+const createAdminCodeSQLTable = isDev ? `
+CREATE TABLE IF NOT EXISTS admin_codes(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  adm_codes TEXT NOT NULL,
+  creation_time TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  validity BOOLEAN DEFAULT 1,
+  admin_id INTEGER NOT NULL,
+  FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
+);` : `
+CREATE TABLE IF NOT EXISTS admin_codes(
+  id SERIAL PRIMARY KEY,
+  adm_codes TEXT NOT NULL,
+  creation_time TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  validity BOOLEAN DEFAULT TRUE,
+  admin_id INTEGER NOT NULL,
+  FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );`;
 
-const createUserSQLTable = isDev ? ` CREATE TABLE IF NOT EXISTS users (
+const createUserSQLTable = isDev ? `
+CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
@@ -85,9 +92,11 @@ const createUserSQLTable = isDev ? ` CREATE TABLE IF NOT EXISTS users (
   reset_token TEXT,
   reset_token_expires TEXT,
   is_linked BOOLEAN DEFAULT 0,
-  api_key TEXT UNIQUE
-  
-);` : `CREATE TABLE IF NOT EXISTS users (
+  api_key TEXT UNIQUE,
+  admin_id INTEGER,
+  FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
+);` : `
+CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
@@ -98,7 +107,9 @@ const createUserSQLTable = isDev ? ` CREATE TABLE IF NOT EXISTS users (
   reset_token TEXT,
   reset_token_expires TEXT,
   is_linked BOOLEAN DEFAULT FALSE,
-  api_key TEXT UNIQUE
+  api_key TEXT UNIQUE,
+  admin_id INTEGER,
+  FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );`;
 
 const createSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS sessions (

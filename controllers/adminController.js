@@ -39,41 +39,43 @@ const AdminLogin = {
 	    res.status(500).json({ status: 500, error: "Something went wrong" });
 	  }
 	},
-async adminCodeG(req, res){
+async adminCodeG(req, res) {
   try {
-    // Generate 8-char uppercase alphanumeric code
+    const adminId = req.user?.id; // assume JWT middleware adds user
+    if (!adminId) {
+      return res.status(401).json({
+        status: 401,
+        error: "Unauthorized – Admin ID missing",
+      });
+    }
+
     const code = [...Array(8)]
       .map(() => Math.random().toString(36)[2])
-      .join('')
+      .join("")
       .toUpperCase();
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes later
-if(process.env.PROJECT_TYPE === "prod"){
-  await db.query(
-      `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity)
-       VALUES (?, ?, ?,false)`,
-      [code, now.toISOString(), expiresAt.toISOString()]
-    );
-} else {
-    await db.query(
-      `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity)
-       VALUES (?, ?, ?, 0)`,
-      [code, now.toISOString(), expiresAt.toISOString()]
-    );
-}
-    res.status(201).json({
-      status:201,
-      code,
-       expires_in: "5 minutes",
-      message: "Admin code generated"
-     
-    });
+    const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 mins
 
+    const validityValue = process.env.PROJECT_TYPE === "prod" ? false : 0;
+
+    await db.query(
+      `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity, admin_id)
+       VALUES (?, ?, ?, ?, ?)`,
+      [code, now.toISOString(), expiresAt.toISOString(), validityValue, adminId]
+    );
+
+    res.status(201).json({
+      status: 201,
+      code,
+      expires_in: "10 minutes",
+      message: "Admin code generated successfully",
+    });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
-      status:500,
-      message: "Failed to generate code"
+      status: 500,
+      message: "Failed to generate admin code",
     });
   }
 }
