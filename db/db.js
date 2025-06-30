@@ -149,12 +149,10 @@ const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
 // Automatically run table setup
 async function createTable (){
   try {
-  await Promise.all([
-    db.query(createTableSQL),
-    db.query(createAdminSQLTable),
-    db.query(createUserSQLTable),
-    db.query(createAdminCodeSQLTable),
-       ])
+   await db.query(createTableSQL),
+   await db.query(createAdminSQLTable),
+   await db.query(createUserSQLTable),
+    await db.query(createAdminCodeSQLTable),
        await db.query(createSessionSQLTable);
     	await db.query(createKeysSQLTable);
 
