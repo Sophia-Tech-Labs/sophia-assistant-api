@@ -354,6 +354,26 @@ async completeSignupP (req, res){
 							error:"Something went Wrong"
 							})
 			}
+		},
+		async superAdminDash(req,res){
+		try{
+			const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1
+			const falseBool = process.env.PROJECT_TYPE === "prod" ? false : 0
+			const totalVerified = await db.query("SELECT * FROM admins WHERE is_verified =  $1",[trueBool]);
+			const notVerified = await db.query("SELECT * FROM admins WHERE is_verified = $1",[falseBool]);
+			res.json({
+				verified:totalVerified.length,
+				notVerified:notVerified.length,
+				banned : 0
+			})
+			} catch(err){
+				console.error(err);
+				res.status(500).json({
+					status:500,
+					error: "Something went wrong",
+					
+				})
+			}
 		}
 	}
 	module.exports = superAdminFunctions;

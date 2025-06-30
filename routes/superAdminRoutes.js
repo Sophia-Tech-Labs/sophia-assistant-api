@@ -15,6 +15,7 @@ router.post("/forgot-password",loginLimiter,superAdminForgotPassword);
 router.post("/reset-password",loginLimiter,superAdminResetPassword);
 router.post("/login",loginLimiter,supAdmFn.superAdminLogin);
 router.post("/signup",loginLimiter,supAdmFn.superAdminSignup);
+router.get("/dashboard",superAdminMd.verifySuperAdmin,supAdmFn.superAdminDash);
 router.post("/invite-admin",superAdminMd.verifySuperAdmin,supAdmFn.inviteAdmin);
 router.delete("/remove-admin/:id",superAdminMd.verifySuperAdmin,supAdmFn.removeAdmin);
 router.get("/view-all-admins",superAdminMd.verifySuperAdmin,supAdmFn.viewAllAdmins);
