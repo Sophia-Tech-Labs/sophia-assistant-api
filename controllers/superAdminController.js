@@ -355,25 +355,31 @@ async completeSignupP (req, res){
 							})
 			}
 		},
-		async superAdminDash(req,res){
-		try{
-			const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1
-			const falseBool = process.env.PROJECT_TYPE === "prod" ? false : 0
-			const totalVerified = await db.query("SELECT * FROM admins WHERE is_verified =  $1",[trueBool]);
-			const notVerified = await db.query("SELECT * FROM admins WHERE is_verified = $1",[falseBool]);
-			res.json({
-				verified:totalVerified.length,
-				notVerified:notVerified.length,
-				banned : 0
-			})
-			} catch(err){
-				console.error(err);
-				res.status(500).json({
-					status:500,
-					error: "Something went wrong",
-					
-				})
-			}
+		async superAdminDash(req, res) {
+		  try {
+		    const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
+		    const falseBool = process.env.PROJECT_TYPE === "prod" ? false : 0;
+		
+		    const totalVerified = await db.query("SELECT * FROM admins WHERE is_verified = $1", [trueBool]);
+		    const notVerified = await db.query("SELECT * FROM admins WHERE is_verified = $1", [falseBool]);
+		
+		    // Fetch first 3 admins (adjust the query if needed)
+		    const firstThreeAdmins = await db.query("SELECT name,email FROM admins ORDER BY created_at ASC LIMIT 3");
+		
+		    res.json({
+		      verified: totalVerified.length,
+		      notVerified: notVerified.length,
+		      banned: 0,
+		      firstThreeAdmins: firstThreeAdmins // <-- add this here
+		    });
+		  } catch (err) {
+		    console.error(err);
+		    res.status(500).json({
+		      status: 500,
+		      error: "Something went wrong",
+		    });
+		  }
 		}
+		
 	}
 	module.exports = superAdminFunctions;
