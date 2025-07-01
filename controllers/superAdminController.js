@@ -79,6 +79,28 @@ const superAdminFunctions = {
 	
 	    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "15m" });
 	    const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+	let bool;
+			if(process.env.PROJECT_TYPE === "prod"){
+			bool = true;
+			} else{
+			bool = false;
+			}
+			res.cookie('accessToken', accessToken, {
+			      httpOnly: true,         // 👉 Client JS can't access it
+			      secure: bool,          // true in production (with HTTPS)
+			      sameSite: 'none',        // Can be 'strict' | 'lax' | 'none'
+			      maxAge: 15 * 60 * 1000 , // 15 minutes
+			      path:"/"
+			    });
+			
+			    res.cookie('refreshToken', refreshToken, {
+			      httpOnly: true,
+			      secure: bool,
+			      sameSite: 'none',
+			      maxAge: 7 * 24 * 60 * 60 * 1000,
+			      path:"/"
+			    });
 	
 	    res.json({
 	      status: 200,
