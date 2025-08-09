@@ -5,16 +5,24 @@ const NodeCache = require('node-cache');
 const db = require("../db/db");
 const msgRetryCounterCache = new NodeCache();
 async function pairCodeG(req,res){
-	const num = req.query.number;
-	if(!num){
+	const apikey = req.query.apikey;
+	if(!apikey){
 		return res.status(400).json({
 			status:400,
-			error:"Phone number is Required"
+			error:"Apikey is Required"
 		})
 	}
+	let num = await db.query("SELECT assistant_phone FROM users WHERE api_key = $1",[apikey]);
+	if(num.length === 0){
+	 return res.status(403).json({
+		status:403,
+		message:"ApiKey not Valid"
+	})
+	}
+	num = num[0].assistant_phone
 	async function initializePairingSession(){
-	const email = "ayanokoji2306@gmail.com"
-		const { state,saveCreds } = await useSQLAuthState(email);
+	try{
+		const { state,saveCreds } = await useSQLAuthState(apikey);
 		const sock = makeWASocket({
 		        auth:state,
 		         //  printQRInTerminal: false,
@@ -53,14 +61,11 @@ async function pairCodeG(req,res){
 		            if ([DisconnectReason.connectionLost, DisconnectReason.connectionClosed, DisconnectReason.restartRequired].includes(reason)) {
 		                console.log('Connection lost, reconnecting...');
 		                initializePairingSession();
-		            } else {
-		                console.log(`Disconnected! reason: ${reason}`);
-		                const userID = await db.query("SELECT id FROM users WHERE email = $1",[email])
-		                await db.query("DELETE FROM sessions WHERE user_id = $1",[userID])
-		                
-		                await sock.end();
 		            }
 		        }
+	} catch(error){
+		console.error("Pairing Error ",error);
+		}
 	}
 	initializePairingSession()
 }

@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 
@@ -146,6 +145,25 @@ const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
 );`;
+
+const createChatHistorySQLTable = isDev ? `CREATE TABLE IF NOT EXISTS chat_history(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+chat_id TEXT NOT NULL,
+role TEXT NOT NULL,
+content TEXT NOT NULL,
+user_id INTEGER,
+timestamp DATETIME,
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE 
+)`: `CREATE TABLE IF NOT EXISTS chat_history (
+  id SERIAL PRIMARY KEY,
+  chat_id TEXT NOT NULL,
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  user_id INTEGER,
+  timestamp TIMESTAMP,
+  CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);`
+
 // Automatically run table setup
 async function createTable (){
   try {
@@ -155,6 +173,7 @@ async function createTable (){
     await db.query(createAdminCodeSQLTable),
        await db.query(createSessionSQLTable);
     	await db.query(createKeysSQLTable);
+    	await db.query(createChatHistorySQLTable);
 
     console.log(`[DB] Users table ready (${isDev ? 'SQLite' : 'PostgreSQL'})`);
   } catch (err) {

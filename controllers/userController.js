@@ -1,6 +1,12 @@
 const db = require("../db/db.js");  
 const bcrypt = require("bcryptjs");  
 const jwt = require("jsonwebtoken");  
+const crypto = require('crypto');
+
+function generateApiKey() {
+  const randomPart = crypto.randomBytes(24).toString('hex'); // 48 characters
+  return `sophia_${randomPart}`;
+}
 
 const userSignup = async (req, res) => {
   const { name, email, password, mainPhone, assistantPhone, adminCode } = req.body;
@@ -45,9 +51,10 @@ const userSignup = async (req, res) => {
 
     // 5. Insert user with `admin_id`
     const insertQuery = `
-      INSERT INTO users (name, email, password, main_phone, assistant_phone, admin_code, admin_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO users (name, email, password, main_phone, assistant_phone, admin_code, admin_id, api_key)
+      VALUES ($1, $2, $3, $4, $5, $6, $7,$8)
     `;
+    const sophiaApiKey = generateApiKey();
     await db.query(insertQuery, [
       name,
       email,
@@ -56,6 +63,7 @@ const userSignup = async (req, res) => {
       assistantPhone,
       adminCode,
       adminId,
+      sophiaApiKey
     ]);
 
     // 6. Delete the used code
