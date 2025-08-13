@@ -7,7 +7,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "baileys": "^6.7.18",
+    "baileys": "github:WhiskeySockets/Baileys",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^11.10.0",
     "cookie-parser": "^1.4.7",
