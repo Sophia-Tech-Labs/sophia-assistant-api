@@ -2,18 +2,17 @@ const jwt = require("jsonwebtoken");
 
 const middlewares = {
   async verifySuperAdmin(req, res, next) {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.cookies?.accessToken;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader) {
       return res.status(401).json({
         error: "No access token provided. Access denied."
       });
     }
 
-    const token = authHeader.split(" ")[1];
 
     try {
-      const decodedUser = jwt.verify(token, process.env.JWT_SECRET);
+      const decodedUser = jwt.verify(authHeader, process.env.JWT_SECRET);
       req.user = decodedUser;
 
       if (decodedUser.role !== "super-admin") {
@@ -33,18 +32,17 @@ const middlewares = {
   },
 
   async verifyAdmin(req, res, next) {
-    const authHeader = req.headers.authorization;
+    const accessToken = req.cookies?.accessToken;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!accessToken) {
       return res.status(401).json({
         error: "No access token provided. Access denied."
       });
     }
 
-    const token = authHeader.split(" ")[1];
 
     try {
-      const decodedUser = jwt.verify(token, process.env.JWT_SECRET);
+      const decodedUser = jwt.verify(accessToken, process.env.JWT_SECRET);
       req.user = decodedUser;
 
       if (decodedUser.role !== "admin") {
@@ -56,6 +54,7 @@ const middlewares = {
 
       next();
     } catch (error) {
+      console.error(error)
       res.status(403).json({
         status: 403,
         error: "Invalid or expired token"
@@ -64,18 +63,16 @@ const middlewares = {
   },
 
   async verifyUser(req, res, next) {
-    const authHeader = req.headers.authorization;
+    const accessToken = req.cookies.accessToken;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!accessToken) {
       return res.status(401).json({
         error: "No access token provided. Access denied."
       });
     }
 
-    const token = authHeader.split(" ")[1];
-
     try {
-      const decodedUser = jwt.verify(token, process.env.JWT_SECRET);
+      const decodedUser = jwt.verify(accessToken, process.env.JWT_SECRET);
       req.user = decodedUser;
 
       if (decodedUser.role !== "user") {

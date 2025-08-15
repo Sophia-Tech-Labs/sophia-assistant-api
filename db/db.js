@@ -5,12 +5,7 @@ const devPath = path.join(__dirname, 'dev.js');
 const db = fs.existsSync(devPath) ? require('./dev') : require('./prod');
 
 const isDev = fs.existsSync(devPath);
-async function test(){
-if(isDev){
-await db.query("PRAGMA foreign_keys = ON;")
-}
-}
-test()
+
 const createTableSQL = isDev ? `CREATE TABLE IF NOT EXISTS super_admins (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
@@ -91,11 +86,15 @@ CREATE TABLE IF NOT EXISTS users (
   reset_token TEXT,
   reset_token_expires TEXT,
   is_linked BOOLEAN DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   api_key TEXT UNIQUE,
+  status TEXT DEFAULT "inactive",
+  last_connected TEXT DEFAULT "Never",
+  bot_name TEXT DEFAULT "Sophia",
   admin_id INTEGER,
   FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
-);` : `
-CREATE TABLE IF NOT EXISTS users (
+  );` : `
+  CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
@@ -106,7 +105,11 @@ CREATE TABLE IF NOT EXISTS users (
   reset_token TEXT,
   reset_token_expires TEXT,
   is_linked BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   api_key TEXT UNIQUE,
+  status TEXT DEFAULT "inactive",
+  last_connected TEXT DEFAULT "Never",
+  bot_name TEXT DEFAULT "Sophia",
   admin_id INTEGER,
   FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );`;

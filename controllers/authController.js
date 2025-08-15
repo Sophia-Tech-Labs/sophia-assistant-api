@@ -2,19 +2,18 @@ const jwt = require("jsonwebtoken");
 const db = require("../db/db");
 const authController = {
   async refreshToken(req, res) {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.cookies?.refreshToken;
   
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader) {
       return res.status(400).json({
         status: 400,
-        error: "Refresh Token Required in Authorization header",
+        error: "Refresh Token Required",
       });
     }
   
-    const refreshToken = authHeader.split(" ")[1];
   
     try {
-      const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+      const decoded = jwt.verify(authHeader, process.env.JWT_SECRET);
       const { id, role } = decoded;
   
       // Role-based DB check
@@ -47,14 +46,20 @@ const authController = {
           email: decoded.email,
           role,
         },
+
         process.env.JWT_SECRET,
         { expiresIn: "15m" }
       );
-  
+  res.cookie("accessToken", accessToken, {
+        httpOnly: true, // Can't be accessed by JS (prevents XSS)
+        secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
+        sameSite: "lax", // Controls cross-site sending
+        maxAge: 17 *60 * 1000, // 15 mins (in milliseconds)
+		path:"/"
+      });
       res.status(200).json({
         status: 200,
-        role,
-        accessToken
+        role
       });
   
     } catch (error) {
@@ -67,19 +72,17 @@ const authController = {
   },
 
   async checkToken(req, res) {
-    const authHeader = req.headers.authorization;
+    const accessToken = req.cookies?.accessToken;
   
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!accessToken) {
       return res.status(400).json({
         status: 400,
         error: "Access Token Required in Authorization header",
       });
     }
   
-    const token = authHeader.split(" ")[1];
-  
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
       const { id, role } = decoded;
   
       // Role-based DB check
@@ -104,6 +107,7 @@ const authController = {
         });
       }
   
+
       res.status(200).json({
         status: 200,
         role,

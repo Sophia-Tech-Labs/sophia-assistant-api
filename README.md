@@ -1,2 +1,3 @@
 # sophia-assistant-api
 Sophia assistant api version to be coded in expressjs(nodejs) and the database should be in postgresql
+Create super admin dashboard we should have 3 blocks like a normal dashboard that has the number of admins and users res.json({ 		      verified: totalVerified.length, 		      notVerified: notVerified.length, 		      totalUsers: totalUsers.count, 		      firstThreeAdmins: firstThreeAdmins // <-- add this here 		    }); like this..  and a piechart too to represent we should be able to see the first three admins next then

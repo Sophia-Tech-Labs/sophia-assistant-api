@@ -49,10 +49,12 @@ async function pairCodeG(req,res){
 		        	const { connection, lastDisconnect } = update;
 		        	if(connection === "open"){
 		        	await delay(5000)
+					await db.query("UPDATE users SET status = $1",["connecting"])
 		        		await sock.end()
 		        	}
 		        	else if(connection === "close"){
 		        		const reason = lastDisconnect?.error?.output?.statusCode;
+						await db.query("UPDATE users SET status = $1",["inactive"])
 		        		await reconn(reason);
 		        	}
 		        })
