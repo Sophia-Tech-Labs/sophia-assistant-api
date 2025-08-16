@@ -109,9 +109,9 @@ CREATE TABLE IF NOT EXISTS users (
   is_linked BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   api_key TEXT UNIQUE,
-  status TEXT DEFAULT "inactive",
-  last_connected TEXT DEFAULT "Never",
-  bot_name TEXT DEFAULT "Sophia",
+  status TEXT DEFAULT 'inactive',
+  last_connected TEXT DEFAULT 'Never',
+  bot_name TEXT DEFAULT 'Sophia',
   admin_id INTEGER,
   FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );`;
@@ -127,6 +127,7 @@ const createSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS sessions (
   creds JSONB NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );`;
+
 const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   category TEXT NOT NULL,
