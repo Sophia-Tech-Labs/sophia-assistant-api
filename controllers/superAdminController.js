@@ -100,14 +100,14 @@ const superAdminFunctions = {
       res.cookie("accessToken", accessToken, {
         httpOnly: true, // Can't be accessed by JS (prevents XSS)
         secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
-        sameSite: "lax", // Controls cross-site sending
+        sameSite: "none", // Controls cross-site sending
         maxAge: 17 * 60 * 1000, // 15 mins (in milliseconds)
         path: "/",
       });
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true, // Can't be accessed by JS (prevents XSS)
         secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS or http
-        sameSite: "lax", // Controls cross-site sending
+        sameSite: "none", // Controls cross-site sending
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (in milliseconds)
         path: "/auth/refresh-token",
       });
