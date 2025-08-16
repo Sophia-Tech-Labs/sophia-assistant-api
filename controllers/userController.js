@@ -188,4 +188,19 @@ async function userDashboard(req, res) {
     });
   }
 }
-module.exports = { userSignup, userLogin, userDashboard };
+
+ async function getApiKey(req,res) {
+    try{
+      const apiKey = await db.query("SELECT api_key FROM users WHERE id = $1",[req.user.id]);
+      res.json({
+        apiKey:apiKey[0].api_key
+      })
+    } catch(error){
+      console.error(error)
+      res.status(500).json({
+        status:500,
+        error:"An error Occured"
+      })
+    }
+  }
+module.exports = { userSignup, userLogin, userDashboard,getApiKey };
