@@ -14,12 +14,15 @@ async function pairCodeG(req, res) {
   const users = await db.query("SELECT api_key FROM users WHERE id = $1", [
     req.user.id,
   ]);
-  
+  console.log(users)
+
   const apikey = users[0].api_key;
+  console.log(apikey)
   let num = await db.query(
     "SELECT assistant_phone FROM users WHERE api_key = $1",
     [apikey]
   );
+  console.log(num)
   if (num.length === 0) {
     return res.status(403).json({
       status: 403,
