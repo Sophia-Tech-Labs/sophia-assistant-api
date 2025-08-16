@@ -83,7 +83,7 @@ const AdminLogin = {
 
       await db.query(
         `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity, admin_id)
-       VALUES (?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5)`,
         [
           code,
           now.toISOString(),
