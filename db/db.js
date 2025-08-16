@@ -124,7 +124,7 @@ const createSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS sessions (
 );` : `CREATE TABLE IF NOT EXISTS sessions (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL UNIQUE,
-  creds JSONB NOT NULL,
+  creds TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );`;
 
@@ -143,7 +143,7 @@ const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
   id SERIAL PRIMARY KEY,
   category TEXT NOT NULL,
   key_id TEXT NOT NULL,
-  value JSONB NOT NULL,
+  value TEXT NOT NULL,
   user_id INTEGER NOT NULL,
   session_id INTEGER NOT NULL,
   UNIQUE(category, key_id, user_id, session_id),
