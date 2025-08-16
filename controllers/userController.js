@@ -51,9 +51,7 @@ const userSignup = async (req, res) => {
     const adminCodeData = codeResult[0];
     const now = new Date();
     const expiredAt = new Date(adminCodeData.expires_at);
-    console.log(now);
-    console.log(expiredAt)
-    console.log(adminCodeData.expires_at);
+
     if (now > expiredAt) {
       await db.query("DELETE FROM admin_codes WHERE adm_codes = $1", [
         adminCode,

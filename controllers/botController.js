@@ -14,6 +14,7 @@ async function pairCodeG(req, res) {
   const users = await db.query("SELECT api_key FROM users WHERE id = $1", [
     req.user.id,
   ]);
+  
   const apikey = users[0].api_key;
   let num = await db.query(
     "SELECT assistant_phone FROM users WHERE api_key = $1",
