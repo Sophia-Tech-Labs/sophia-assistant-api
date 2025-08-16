@@ -77,8 +77,7 @@ const AdminLogin = {
         .toUpperCase();
 
       const now = new Date();
-      const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 mins
-
+      expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
       const validityValue = process.env.PROJECT_TYPE === "prod" ? false : 0;
 
       await db.query(
@@ -87,7 +86,7 @@ const AdminLogin = {
         [
           code,
           now.toISOString(),
-          expiresAt.toISOString(),
+          expiresAt,
           validityValue,
           adminId,
         ]
