@@ -10,7 +10,7 @@ const supAdmRoutes = require('./routes/superAdminRoutes');
 const cookieParser = require('cookie-parser');
 
 app.use(cors({
-  origin: "https://sophia-assistant-frontend.vercel.app", // allow frontend
+  origin: process.env.APP_URL, // allow frontend
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));

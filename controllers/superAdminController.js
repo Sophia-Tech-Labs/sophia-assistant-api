@@ -100,14 +100,14 @@ const superAdminFunctions = {
       res.cookie("accessToken", accessToken, {
         httpOnly: true, // Can't be accessed by JS (prevents XSS)
         secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
-        sameSite: "none", // Controls cross-site sending
+        sameSite: "lax", // Controls cross-site sending
         maxAge: 17 * 60 * 1000, // 15 mins (in milliseconds)
         path: "/",
       });
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true, // Can't be accessed by JS (prevents XSS)
         secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS or http
-        sameSite: "none", // Controls cross-site sending
+        sameSite: "lax", // Controls cross-site sending
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (in milliseconds)
         path: "/auth/refresh-token",
       });
@@ -146,14 +146,13 @@ const superAdminFunctions = {
     try {
       const token = crypto.randomBytes(32).toString("hex");
       let expiresAt;
-      if (process.env.PROJECT_TYPE === "prod") {
-        expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-      } else {
-        expiresAt = new Date(Date.now() + 15 * 60 * 1000)
-          .toISOString()
-          .replace("T", " ")
-          .split(".")[0];
-      }
+      expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
+      // else {
+      //   expiresAt = new Date(Date.now() + 15 * 60 * 1000)
+      //     .toISOString()
+      //     .replace("T", " ")
+      //     .split(".")[0];
+      // }
 
       await db.query(
         `INSERT INTO admins (name, email, password_hash, signup_token, token_expires)
@@ -165,7 +164,7 @@ const superAdminFunctions = {
       return res.status(200).json({
         status: 200,
         message: "Signup link sent to admin.",
-        signupLink: `${process.env.APP_URL}/admin/complete-signup/${token}`,
+        signupLink: `${process.env.API_URL}/admin/complete-signup/${token}`,
       });
     } catch (error) {
       console.error(error);
@@ -190,8 +189,9 @@ const superAdminFunctions = {
       }
 
       const user = result[0];
+      console.log(new Date(user.token_expires));
       const now = new Date();
-
+      console.log(now);
       // Check if expired
       if (new Date(user.token_expires) < now) {
         // await db.query("DELETE FROM admins WHERE signup_token = $1",[token]);
