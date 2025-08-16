@@ -50,10 +50,11 @@ const authController = {
         process.env.JWT_SECRET,
         { expiresIn: "15m" }
       );
+      const sameSiteFix = process.env.PROJECT_TYPE === "prod" ? "none" : "lax"
   res.cookie("accessToken", accessToken, {
         httpOnly: true, // Can't be accessed by JS (prevents XSS)
         secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
-        sameSite: "none", // Controls cross-site sending
+        sameSite: sameSiteFix, // Controls cross-site sending
         maxAge: 17 *60 * 1000, // 15 mins (in milliseconds)
 		path:"/"
       });

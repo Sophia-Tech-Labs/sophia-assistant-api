@@ -8,20 +8,24 @@ const {
 } = require("baileys");
 const { useSQLAuthState } = require("../lib/auth");
 const NodeCache = require("node-cache");
+const Boom = require("@hapi/boom");
 const db = require("../db/db");
+const qrcode = require("qrcode");
 const msgRetryCounterCache = new NodeCache();
+const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
+const falseBool = process.env.PROJECT_TYPE === "prod" ? false : 0;
+
 async function pairCodeG(req, res) {
   const users = await db.query("SELECT api_key FROM users WHERE id = $1", [
     req.user.id,
   ]);
-
 
   const apikey = users[0].api_key;
   let num = await db.query(
     "SELECT assistant_phone FROM users WHERE api_key = $1",
     [apikey]
   );
-  
+
   if (num.length === 0) {
     return res.status(403).json({
       status: 403,
@@ -29,19 +33,27 @@ async function pairCodeG(req, res) {
     });
   }
   num = num[0].assistant_phone;
+
   async function initializePairingSession() {
     try {
       const { state, saveCreds } = await useSQLAuthState(apikey);
       const sock = makeWASocket({
         auth: state,
-        //  printQRInTerminal: false,
-        logger: pino({ level: "silent" }).child({ level: "fatal" }),
-        browser: Browsers.macOS("Safari"), //check docs for more custom options
-        markOnlineOnConnect: true, //true or false yoour choice
+        logger: pino({ level: "debug" }).child({ level: "fatal" }),
+        browser: Browsers.macOS("Safari"),
+        markOnlineOnConnect: true,
         msgRetryCounterCache,
       });
 
-      if (!sock.authState.creds.registered) {
+      // Check if user is connected in DB
+      const userStatus = await db.query(
+        "SELECT is_connected FROM users WHERE api_key = $1",
+        [apikey]
+      );
+      const isConnected = userStatus[0]?.is_connected;
+
+      // If not registered OR not connected in DB, generate new pairing code
+      if (!sock.authState.creds.registered || !isConnected) {
         console.log("Requesting pairing code...");
         await delay(1500);
         const formNum = num.replace(/[^0-9]/g, "");
@@ -49,43 +61,253 @@ async function pairCodeG(req, res) {
         if (!res.headersSent) {
           res.send({ code: code?.match(/.{1,4}/g)?.join("-") });
         }
+      } else {
+        // Already registered and connected
+        if (!res.headersSent) {
+          res.json({
+            status: 200,
+            message: "Bot is already connected",
+            connected: true,
+          });
+        }
       }
 
       sock.ev.on("creds.update", async () => {
         await saveCreds();
       });
+
       sock.ev.on("connection.update", async (update) => {
-        const { connection, lastDisconnect } = update;
-        if (connection === "open") {
-          const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
-          await delay(5000);
-          await db.query("UPDATE users SET status = $1", ["connecting"]);
-          await db.query("UPDATE users SET is_connected = $1", [trueBool]);
-          await sock.end();
-        } else if (connection === "close") {
-          const reason = lastDisconnect?.error?.output?.statusCode;
-          await db.query("UPDATE users SET status = $1", ["inactive"]);
-          await reconn(reason);
+        try {
+          const { connection, lastDisconnect } = update;
+          if (connection === "open") {
+            const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
+            await delay(5000);
+            await db.query("UPDATE users SET status = $1 WHERE api_key = $2", [
+              "connecting",
+              apikey,
+            ]);
+            console.log("Status change Successful")
+            await db.query(
+              "UPDATE users SET is_connected = $1 WHERE api_key = $2",
+              [trueBool, apikey]
+            );
+            await sock.end();
+          } else if (connection === "close") {
+            const reason = lastDisconnect?.error?.output?.statusCode;
+            console.log("❌ Connection closed:", reason);
+  
+            if (reason === DisconnectReason.restartRequired) {
+              console.log("♻️ Restart required, reconnecting...");
+              initializePairingSession(); // call your session function again
+             } 
+            //else {
+            //   await db.query("UPDATE users SET status = $1 WHERE api_key = $2", [
+            //     "inactive",
+            //     apikey,
+            //   ]);
+            //   console.log("Status change back to normal")
+            //   await db.query(
+            //     "UPDATE users SET is_connected = $1 WHERE api_key = $2",
+            //     [falseBool, apikey]
+            //   );
+            // }
+          }
+        } catch (error) {
+          console.error("⚠️ Connection.update error caught(pairing section): ",error)
         }
       });
 
-      async function reconn(reason) {
-        if (
-          [
-            DisconnectReason.connectionLost,
-            DisconnectReason.connectionClosed,
-            DisconnectReason.restartRequired,
-          ].includes(reason)
-        ) {
-          console.log("Connection lost, reconnecting...");
-          initializePairingSession();
-        }
-      }
+      // async function reconn(reason) {
+      //   if (
+      //     [
+      //       DisconnectReason.connectionLost,
+      //       DisconnectReason.connectionClosed,
+      //       DisconnectReason.restartRequired,
+      //     ].includes(reason)
+      //   ) {
+      //     console.log("Connection lost, reconnecting...");
+      //     initializePairingSession();
+      //   } else if (reason === DisconnectReason.loggedOut) {
+      //     // Clear session data when logged out
+      //     console.log("Logged out, clearing session...");
+      //     await clearUserSession(apikey);
+      //   }
+      // }
     } catch (error) {
       console.error("Pairing Error ", error);
     }
   }
   initializePairingSession();
+}
+async function generateQRCode(req, res) {
+  const users = await db.query("SELECT api_key FROM users WHERE id = $1", [
+    req.user.id,
+  ]);
+
+  const apikey = users[0].api_key;
+  async function initializeQRSession() {
+    try {
+      const { state, saveCreds } = await useSQLAuthState(apikey);
+      const sock = makeWASocket({
+        auth: state,
+        logger: pino({ level: "debug" }).child({ level: "fatal" }),
+        browser: Browsers.macOS("Safari"),
+        markOnlineOnConnect: true,
+        msgRetryCounterCache,
+        printQRInTerminal: false, // ✅ Don't print in terminal
+      });
+
+      // Check if already connected
+      const userStatus = await db.query(
+        "SELECT is_connected FROM users WHERE api_key = $1",
+        [apikey]
+      );
+      const isConnected = userStatus[0]?.is_connected;
+      
+      if (!sock.authState.creds.registered || !isConnected) {
+        console.log("Generating QR code...");
+        
+        // Listen for QR code
+        sock.ev.on("connection.update", async (update) => {
+          try {
+            const { connection, lastDisconnect, qr } = update;
+      
+            if (qr && !res.headersSent) {
+              // ✅ Generate QR code as base64 image
+              try {
+                const qrCodeDataURL = await qrcode.toDataURL(qr, {
+                  errorCorrectionLevel: "M",
+                  type: "image/png",
+                  quality: 0.92,
+                  margin: 1,
+                  color: {
+                    dark: "#000000",
+                    light: "#FFFFFF",
+                  },
+                  width: 256,
+                });
+      
+                res.json({
+                  method: "qr_code",
+                  qr: qrCodeDataURL, // base64 data URL
+                  message: "Scan this QR code with WhatsApp",
+                });
+              } catch (qrError) {
+                console.error("QR generation error:", qrError);
+                res.status(500).json({
+                  status: 500,
+                  error: "Failed to generate QR code",
+                });
+              }
+            }
+      
+            if (connection === "open") {
+              await delay(5000);
+              await db.query("UPDATE users SET status = $1 WHERE api_key = $2", [
+                "connecting",
+                apikey,
+              ]);
+              console.log("Status change Successful")
+              await db.query(
+                "UPDATE users SET is_connected = $1 WHERE api_key = $2",
+                [trueBool, apikey]
+              );
+              await sock.end();
+            } else if (connection === "close") {
+              const reason = lastDisconnect?.error?.output?.statusCode;
+              console.log("❌ Connection closed:", reason);
+      
+              if (reason === DisconnectReason.restartRequired) {
+                console.log("♻️ Restart required, reconnecting...");
+                initializeQRSession(); // call your session function again
+              } 
+              // else {
+              //   await db.query(
+              //     "UPDATE users SET status = $1 WHERE api_key = $2",
+              //     ["inactive", apikey]
+              //   );
+              //   console.log("Status change back to normal")
+              //   await db.query(
+              //     "UPDATE users SET is_connected = $1 WHERE api_key = $2",
+              //     [falseBool, apikey]
+              //   );
+              // }
+            }
+            
+          } catch (error) {
+            console.error("⚠️ Connection.update error caught(qr section):",error)
+          }
+        });
+      } else {
+        if (!res.headersSent) {
+          res.json({
+            status: 200,
+            message: "Bot is already connected",
+            connected: true,
+          });
+        }
+      }
+
+      sock.ev.on("creds.update", async () => {
+        await saveCreds();
+      });
+    } catch (error) {
+      console.error("QR Error ", error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          status: 500,
+          error: "Failed to generate QR code",
+        });
+      }
+    }
+  }
+  initializeQRSession();
+}
+
+// ✅ Add this function to clear sessions
+async function clearUserSession(apiKey) {
+  try {
+    // Clear sessions and keys for this user
+    await db.query(
+      "DELETE FROM sessions WHERE user_id = (SELECT id FROM users WHERE api_key = $1)",
+      [apiKey]
+    );
+    await db.query(
+      "DELETE FROM keys WHERE user_id = (SELECT id FROM users WHERE api_key = $1)",
+      [apiKey]
+    );
+    // Reset connection status
+    await db.query(
+      "UPDATE users SET is_connected = $1, status = $2 WHERE api_key = $3",
+      [falseBool, "inactive", apiKey]
+    );
+    console.log("Session cleared for user");
+  } catch (error) {
+    console.error("Error clearing session:", error);
+  }
+}
+
+// ✅ Add endpoint to manually reset connection
+async function resetBotConnection(req, res) {
+  try {
+    const users = await db.query("SELECT api_key FROM users WHERE id = $1", [
+      req.user.id,
+    ]);
+    const apikey = users[0].api_key;
+
+    await clearUserSession(apikey);
+
+    res.json({
+      status: 200,
+      message: "Bot connection reset. You can now pair again.",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: 500,
+      error: "Failed to reset connection",
+    });
+  }
 }
 
 async function getBotStatus(req, res) {
@@ -107,4 +329,9 @@ async function getBotStatus(req, res) {
   }
 }
 
-module.exports = { pairCodeG, getBotStatus };
+module.exports = {
+  pairCodeG,
+  getBotStatus,
+  generateQRCode,
+  resetBotConnection,
+};

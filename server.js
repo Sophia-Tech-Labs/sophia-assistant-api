@@ -47,6 +47,10 @@ app.listen(PORT, () => {
 
 const { close } = require('./db/db.js');
 
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("🚨 Unhandled Rejection at:", promise, "reason:", reason);
+});
+
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
   await close();

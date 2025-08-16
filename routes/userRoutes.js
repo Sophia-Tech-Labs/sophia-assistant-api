@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { userSignup,userLogin, userDashboard, getApiKey } = require("../controllers/userController");
-const { pairCodeG, getBotStatus } = require("../controllers/botController")
+const { pairCodeG, getBotStatus, generateQRCode, resetBotConnection } = require("../controllers/botController")
 const middleware = require("../middlewares/authMiddleware")
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -19,6 +19,8 @@ router.post("/dashboard",middleware.verifyUser,userDashboard);
 router.post("/forgot-password",loginLimiter,userForgotPassword);
 router.post("/reset-password",loginLimiter,userResetPassword);
 router.post("/pair",middleware.verifyUser,pairCodeG);
+router.post("/qr-code",middleware.verifyUser,generateQRCode);
+router.post("/reset-bot",middleware.verifyUser,resetBotConnection);
 router.post("/bot-status",middleware.verifyUser,getBotStatus);
 
 module.exports = router

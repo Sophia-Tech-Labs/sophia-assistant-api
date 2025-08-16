@@ -7,6 +7,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@hapi/boom": "^10.0.1",
     "baileys": "github:WhiskeySockets/Baileys",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^11.10.0",
@@ -19,7 +20,8 @@
     "node-cache": "^5.1.2",
     "nodemailer": "^7.0.3",
     "pg": "^8.11.1",
-    "pino": "^9.7.0"
+    "pino": "^9.7.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
