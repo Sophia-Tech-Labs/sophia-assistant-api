@@ -53,7 +53,7 @@ const authController = {
   res.cookie("accessToken", accessToken, {
         httpOnly: true, // Can't be accessed by JS (prevents XSS)
         secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
-        sameSite: "lax", // Controls cross-site sending
+        sameSite: "none", // Controls cross-site sending
         maxAge: 17 *60 * 1000, // 15 mins (in milliseconds)
 		path:"/"
       });

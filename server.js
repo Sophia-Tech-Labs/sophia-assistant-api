@@ -10,8 +10,7 @@ const supAdmRoutes = require('./routes/superAdminRoutes');
 const cookieParser = require('cookie-parser');
 
 const allowedOrigins = [
-  "http://localhost:5173", // for local testing
-  "https://sophia-assistant-frontend.vercel.app" // 🔥 your Vercel frontend
+  process.env.APP_URL
 ];
 
 app.use(cors({
