@@ -168,7 +168,7 @@ async function userDashboard(req, res) {
       req.user.id,
     ]);
 
-    // Fetch first 3 admins (adjust the query if needed)
+    
     res.json({
       botStatus: {
         isLinked: Boolean(info[0].is_linked),

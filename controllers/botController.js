@@ -53,7 +53,7 @@ async function pairCodeG(req, res) {
       const isConnected = userStatus[0]?.is_connected;
 
       // If not registered OR not connected in DB, generate new pairing code
-      if (!sock.authState.creds.registered || !isConnected) {
+      if (!sock.authState.creds.registered && !isConnected) {
         console.log("Requesting pairing code...");
         await delay(1500);
         const formNum = num.replace(/[^0-9]/g, "");
@@ -85,8 +85,7 @@ async function pairCodeG(req, res) {
             await db.query("UPDATE users SET status = $1 WHERE api_key = $2", [
               "connecting",
               apikey,
-            ]);
-            console.log("Status change Successful")
+            ])
             await db.query(
               "UPDATE users SET is_connected = $1 WHERE api_key = $2",
               [trueBool, apikey]
@@ -313,12 +312,13 @@ async function resetBotConnection(req, res) {
 async function getBotStatus(req, res) {
   try {
     const userInfo = await db.query(
-      "SELECT is_connected FROM users WHERE id = $1",
+      "SELECT is_connected,status FROM users WHERE id = $1",
       [req.user.id]
     );
     res.json({
       status: 200,
       connected: Boolean(userInfo[0].is_connected),
+      botStatus:userInfo[0].status
     });
   } catch (error) {
     console.error(error);
