@@ -20,6 +20,10 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', 1);
 
+app.get('/',(req,res) => {
+  res.send("API IS WORKING FINE")
+})
+
 app.get('/health', (req, res) => {
   res.json({ status: 'API is running' });
 });
