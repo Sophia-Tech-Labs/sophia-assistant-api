@@ -28,6 +28,16 @@ app.get('/health', (req, res) => {
   res.json({ status: 'API is running' });
 });
 
+app.get('/test-env', (req, res) => {
+  res.json({
+    RENDER_EXTERNAL_URL: process.env.RENDER_EXTERNAL_URL,
+    RENDER_SERVICE_NAME: process.env.RENDER_SERVICE_NAME,
+    PORT: process.env.PORT,
+    HOST: req.headers.host,
+    ALL_ENV: process.env // This shows EVERYTHING
+  })
+})
+
 
 // Mount auth routes
 app.use('/super-admin', supAdmRoutes);

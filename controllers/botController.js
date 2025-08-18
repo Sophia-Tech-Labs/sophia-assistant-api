@@ -19,7 +19,8 @@ async function pairCodeG(req, res) {
   const users = await db.query("SELECT api_key FROM users WHERE id = $1", [
     req.user.id,
   ]);
-
+  
+  const isConnected = userStatus[0]?.is_connected;
   const apikey = users[0].api_key;
   let num = await db.query(
     "SELECT assistant_phone FROM users WHERE api_key = $1",
@@ -31,6 +32,14 @@ async function pairCodeG(req, res) {
       status: 403,
       message: "ApiKey not Valid",
     });
+  }
+  if(!isConnected){
+     res.json({
+            status: 200,
+            message: "Bot is already connected",
+            connected: true,
+          });
+          return;
   }
   num = num[0].assistant_phone;
 
@@ -50,7 +59,6 @@ async function pairCodeG(req, res) {
         "SELECT is_connected FROM users WHERE api_key = $1",
         [apikey]
       );
-      const isConnected = userStatus[0]?.is_connected;
 
       // If not registered OR not connected in DB, generate new pairing code
       if (!sock.authState.creds.registered && !isConnected) {
