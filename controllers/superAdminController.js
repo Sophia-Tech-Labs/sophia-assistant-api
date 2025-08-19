@@ -1,7 +1,10 @@
+//create a remove premium route for u to easily remove based on req.param and oh you haven't added routes yet so route it
 const db = require("../db/db.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
+const falseBool = process.env.PROJECT_TYPE === "prod" ? false : 0;
 
 const superAdminFunctions = {
   async superAdminSignup(req, res) {
@@ -393,16 +396,14 @@ const superAdminFunctions = {
   },
   async superAdminDash(req, res) {
     try {
-      const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
-      const falseBool = process.env.PROJECT_TYPE === "prod" ? false : 0;
 
       const totalVerified = await db.query(
         "SELECT * FROM admins WHERE is_verified = $1",
         [trueBool]
       );
-      const notVerified = await db.query(
-        "SELECT * FROM admins WHERE is_verified = $1",
-        [falseBool]
+      const premium = await db.query(
+        "SELECT * FROM users WHERE is_premium = $1",
+        [trueBool]
       );
 
       // Fetch first 3 admins (adjust the query if needed)
@@ -414,7 +415,7 @@ const superAdminFunctions = {
       res.json({
         totalUsers: totalUsers[0].count,
         verified: totalVerified.length,
-        notVerified: notVerified.length,
+        notVerified: premium.length,
         firstThreeAdmins: firstThreeAdmins, // <-- add this here
       });
     } catch (err) {
@@ -425,5 +426,95 @@ const superAdminFunctions = {
       });
     }
   },
+   async viewAllUsers(req, res) {
+    try {
+      const results = await db.query(
+        "SELECT id,name,email,is_premium,created_at FROM users"
+      );
+      if (results.length === 0) {
+        res.status(404).json({
+          status: 404,
+          error: "Users Not Found",
+        });
+        return;
+      }
+      res.json({
+        status: 200,
+        results,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 500,
+        error: "Something went Wrong",
+      });
+    }
+  },
+  async becomePremiumMember(req,res){
+    const { email,number } = req.body;
+    if(!email || !number){
+      return res.status(400).json({
+        status:400,
+        message:"All fields are required"
+      })
+    }
+    try {
+      const user = await db.query("SELECT * FROM users WHERE email = $1 AND main_phone = $2",[email,number])
+      if(user.length === 0){
+        return res.status(404).json({
+          status:404,
+          message:"User not found"
+        })
+      }
+
+      await db.query("UPDATE users SET is_premium = $1 WHERE email = $2 AND main_phone = $3",[trueBool,email,number]);
+      res.json({
+        status:200,
+        message:"Premium Change Successful. Enjoy!"
+      })
+
+    } catch (error) {
+      res.status(500).json({
+        status:500,
+        message:"An error occured"
+      })
+    }
+  },
+  async deactivatePremium(req, res) {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({
+      status: 400,
+      message: "User ID is required"
+    });
+  }
+
+  try {
+    // Check if user exists
+    const user = await db.query("SELECT * FROM users WHERE id = $1", [id]);
+    if (user.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found"
+      });
+    }
+
+    // Update user to deactivate premium
+    await db.query("UPDATE users SET is_premium = $1 WHERE id = $2", [falseBool, id]);
+
+    res.json({
+      status: 200,
+      message: "Premium deactivated successfully."
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "An error occurred",
+      error: error.message
+    });
+  }
+}
+
 };
 module.exports = superAdminFunctions;

@@ -179,6 +179,40 @@ async function userDashboard(req, res) {
       userInfo: {
         name: info[0].name,
         email: info[0].email,
+        isPremium:info[0].is_premium
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 500,
+      error: "Something went wrong",
+    });
+  }
+}
+async function premiumUserDashboard(req, res) {
+  try {
+    const info = await db.query("SELECT * FROM users WHERE id = $1", [
+      req.user.id,
+    ]);
+
+    if(!info[0].is_premium){
+      return res.status(403).json({
+        status:403,
+        message:"You are not a premium User, Access denied"
+      })
+    }
+    res.json({
+      botStatus: {
+        isLinked: Boolean(info[0].is_premium_linked),
+        status: info[0].premium_status,
+        lastConnected: info[0].premium_last_connected,
+        botName: info[0].bot_name,
+      },
+      userInfo: {
+        name: info[0].name,
+        email: info[0].email,
+        isPremium:Boolean(info[0].is_premium)
       },
     });
   } catch (err) {
@@ -204,4 +238,4 @@ async function userDashboard(req, res) {
       })
     }
   }
-module.exports = { userSignup, userLogin, userDashboard,getApiKey };
+module.exports = { userSignup, userLogin, userDashboard,getApiKey,premiumUserDashboard };

@@ -1,0 +1,1 @@
+Successfully linked the dashboard for premium and basic together.. next is to add pairing logic for both of them.. we are going to change the /pair-bot when in premium mode and also make it modular like the userDashboard section. and also add super-admin/users.. we use the email and main number to change the user to premium..

@@ -1,3 +1,6 @@
+/* Alter the tables of both sqlite and postgres to add those premium stuff.. request schema
+from both sqlit and postgres and use ai to compare which is missing and alter 
+ */
 const fs = require('fs');
 const path = require('path');
 
@@ -81,6 +84,11 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   main_phone TEXT NOT NULL,
+  is_premium BOOLEAN DEFAULT 0,
+  is_premium_connected BOOLEAN DEFAULT 0,
+  is_premium_linked BOOLEAN DEFAULT 0,
+  premium_last_connected TEXT DEFAULT "Never",
+  premium_status TEXT DEFAULT "inactive",
   assistant_phone TEXT NOT NULL,
   admin_code TEXT NOT NULL,
   is_connected BOOLEAN DEFAULT 0,
@@ -105,6 +113,11 @@ CREATE TABLE IF NOT EXISTS users (
   admin_code TEXT NOT NULL,
   is_connected BOOLEAN DEFAULT false,
   reset_token TEXT,
+  is_premium BOOLEAN DEFAULT false,
+  is_premium_connected BOOLEAN DEFAULT false,
+  is_premium_linked BOOLEAN DEFAULT false,
+  premium_last_connected TEXT DEFAULT 'Never',
+  premium_status TEXT DEFAULT 'inactive',
   reset_token_expires TEXT,
   is_linked BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -116,6 +129,41 @@ CREATE TABLE IF NOT EXISTS users (
   FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );`;
 
+const createMainSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS main_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL UNIQUE,
+  creds TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);` : `CREATE TABLE IF NOT EXISTS main_sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL UNIQUE,
+  creds TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);`;
+
+const createMainKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS main_keys (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category TEXT NOT NULL,
+  key_id TEXT NOT NULL,
+  value TEXT NOT NULL,
+  user_id INTEGER NOT NULL,
+  session_id INTEGER NOT NULL,
+  UNIQUE(category, key_id, user_id, session_id),
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (session_id) REFERENCES main_sessions(id) ON DELETE CASCADE
+);` : `CREATE TABLE IF NOT EXISTS main_keys (
+  id SERIAL PRIMARY KEY,
+  category TEXT NOT NULL,
+  key_id TEXT NOT NULL,
+  value TEXT NOT NULL,
+  user_id INTEGER NOT NULL,
+  session_id INTEGER NOT NULL,
+  UNIQUE(category, key_id, user_id, session_id),
+  
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (session_id) REFERENCES main_sessions(id) ON DELETE CASCADE
+);`;
 const createSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL UNIQUE,
@@ -127,6 +175,8 @@ const createSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS sessions (
   creds TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );`;
+
+
 
 const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -179,6 +229,8 @@ async function createTable (){
     await db.query(createAdminCodeSQLTable),
        await db.query(createSessionSQLTable);
     	await db.query(createKeysSQLTable);
+       await db.query(createMainSessionSQLTable);
+    	await db.query(createMainKeysSQLTable);
     	await db.query(createChatHistorySQLTable);
 
     console.log(`[DB] Users table ready (${isDev ? 'SQLite' : 'PostgreSQL'})`);
