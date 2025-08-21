@@ -17,7 +17,7 @@ router.post("/login",loginLimiter,supAdmFn.superAdminLogin);
 router.post("/signup",loginLimiter,supAdmFn.superAdminSignup);
 router.get("/dashboard",superAdminMd.verifySuperAdmin,supAdmFn.superAdminDash);
 router.post("/invite-admin",superAdminMd.verifySuperAdmin,supAdmFn.inviteAdmin);
-router.post("/activate-premium"/* ,superAdminMd.verifySuperAdmin */, supAdmFn.becomePremiumMember);
+router.post("/activate-premium",superAdminMd.verifySuperAdmin, supAdmFn.becomePremiumMember);
 router.post("/deactivate-premium/:id",superAdminMd.verifySuperAdmin,supAdmFn.deactivatePremium);
 router.delete("/remove-admin/:id",superAdminMd.verifySuperAdmin,supAdmFn.removeAdmin);
 router.get("/view-all-admins",superAdminMd.verifySuperAdmin,supAdmFn.viewAllAdmins);

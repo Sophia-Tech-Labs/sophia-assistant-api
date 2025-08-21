@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { userSignup,userLogin, userDashboard, getApiKey, premiumUserDashboard } = require("../controllers/userController");
+const { userSignup,userLogin, userDashboard, getApiKey, premiumUserDashboard, getPhoneNumber } = require("../controllers/userController");
 const { pairCodeG, getBotStatus, generateQRCode, resetBotConnection } = require("../controllers/botController")
 const middleware = require("../middlewares/authMiddleware")
 const { userForgotPassword,userResetPassword } = require("../lib/test");
@@ -22,11 +22,12 @@ router.post("/premium-dashboard",middleware.verifyUser,premiumUserDashboard);
 router.post("/forgot-password",loginLimiter,userForgotPassword);
 router.post("/reset-password",loginLimiter,userResetPassword);
 router.post("/pair",middleware.verifyUser,pairCodeG);
-router.post("/premium-pair",middleware.verifyUser,mainPairCodeG);
 router.post("/qr-code",middleware.verifyUser,generateQRCode);
-router.post("/premium-qr-code",middleware.verifyUser,generateMainQRCode);
 router.post("/reset-bot",middleware.verifyUser,resetBotConnection);
 router.post("/bot-status",middleware.verifyUser,getBotStatus);
+router.post("/get-phone",middleware.verifyUser,getPhoneNumber);
+router.post("/premium-pair",middleware.verifyUser,mainPairCodeG);
+router.post("/premium-qr-code",middleware.verifyUser,generateMainQRCode);
 router.post("/reset-premium-bot",middleware.verifyUser,resetPremiumBotConnection);
 router.post("/premium-bot-status",middleware.verifyUser,getPremiumBotStatus);
 

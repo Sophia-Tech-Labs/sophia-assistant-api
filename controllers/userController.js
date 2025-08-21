@@ -224,6 +224,41 @@ async function premiumUserDashboard(req, res) {
   }
 }
 
+async function getPhoneNumber(req,res) {
+  const { bot } = req.body;
+  if(!bot){
+    return res.status(400).json({
+      status:400,
+      message:"Bot type is required"
+    })
+  }
+  try {
+    const userInfo = await db.query("SELECT * FROM users WHERE id = $1",[req.user.id])
+  
+    if(bot === "main"){
+      res.json({
+        status:200,
+        phoneNumber:userInfo[0].assistant_phone
+      })
+    } else if(bot === "assistant"){
+      res.json({
+        status:200,
+        phoneNumber:userInfo[0].main_phone
+      })
+    } else {
+      res.status(404).json({
+        status:404,
+        message:"Phone numbers Not found"
+      })
+    }
+  } catch (error) {
+    res.status(500).json({
+      status:500,
+      message:"An error Occured"
+    })
+  }
+}
+
  async function getApiKey(req,res) {
     try{
       const apiKey = await db.query("SELECT api_key FROM users WHERE id = $1",[req.user.id]);
@@ -238,4 +273,4 @@ async function premiumUserDashboard(req, res) {
       })
     }
   }
-module.exports = { userSignup, userLogin, userDashboard,getApiKey,premiumUserDashboard };
+module.exports = { userSignup, userLogin,getPhoneNumber,userDashboard,getApiKey,premiumUserDashboard };

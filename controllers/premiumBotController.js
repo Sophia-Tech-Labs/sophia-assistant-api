@@ -25,7 +25,7 @@ async function mainPairCodeG(req, res) {
         [apikey]
       );
 
-  const isConnected = userStatus[0]?.is_connected;
+  const isConnected = userStatus[0]?.is_premium_connected;
   const isPremium = userStatus[0].is_premium;
 
   if(!isPremium){
@@ -45,7 +45,7 @@ async function mainPairCodeG(req, res) {
       message: "ApiKey not Valid",
     });
   }
-  if(!isConnected){
+  if(isConnected){
      res.json({
             status: 200,
             message: "Bot is already connected",
@@ -53,7 +53,7 @@ async function mainPairCodeG(req, res) {
           });
           return;
   }
-  num = num[0].assistant_phone;
+  num = num[0].main_phone;
 
   async function initializePairingSession() {
     try {
@@ -137,7 +137,7 @@ const userStatus = await db.query(
         [apikey]
       );
 
-  const isConnected = userStatus[0]?.is_connected;
+  const isConnected = userStatus[0]?.is_premium__connected;
   const isPremium = userStatus[0].is_premium;
 
   if(!isPremium){
@@ -147,6 +147,15 @@ const userStatus = await db.query(
     })
   }
 
+  if(isConnected){
+     res.json({
+            status: 200,
+            message: "Bot is already connected",
+            connected: true,
+          });
+          return;
+  }
+  
   async function initializeQRSession() {
     try {
       const { state, saveCreds } = await useMainSQLAuthState(apikey);
@@ -210,7 +219,7 @@ const userStatus = await db.query(
               ]);
               console.log("Status change Successful")
               await db.query(
-                "UPDATE users SET is_connected = $1 WHERE api_key = $2",
+                "UPDATE users SET is_premium_connected = $1 WHERE api_key = $2",
                 [trueBool, apikey]
               );
               await sock.end();
@@ -303,13 +312,13 @@ async function resetPremiumBotConnection(req, res) {
 async function getPremiumBotStatus(req, res) {
   try {
     const userInfo = await db.query(
-      "SELECT is_premium_connected,status FROM users WHERE id = $1",
+      "SELECT is_premium_connected,premium_status FROM users WHERE id = $1",
       [req.user.id]
     );
     res.json({
       status: 200,
-      connected: Boolean(userInfo[0].is_connected),
-      botStatus:userInfo[0].status
+      connected: Boolean(userInfo[0].is_premium_connected),
+      botStatus:userInfo[0].premium_status
     });
   } catch (error) {
     console.error(error);
