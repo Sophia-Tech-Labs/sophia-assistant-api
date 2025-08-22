@@ -8,12 +8,21 @@ const cors = require("cors");
 const path = require("path");
 const supAdmRoutes = require('./routes/superAdminRoutes');
 const cookieParser = require('cookie-parser');
+const allowedOrigins = [
+  process.env.APP_URL,
+  "https://sophia-assistant.zone.id"
+];
 
 app.use(cors({
-  origin: process.env.APP_URL, // allow frontend
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true); // Allow
+    } else {
+      callback(new Error("Not allowed by CORS")); // Block
+    }
+  }
 }));
+
 
 app.use(express.json());
 app.use(cookieParser());
