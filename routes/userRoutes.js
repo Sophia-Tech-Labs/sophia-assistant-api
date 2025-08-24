@@ -10,7 +10,11 @@ const paymentMiddleware = require("../middlewares/paymentMiddleware");
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 7, // limit each IP to 5 login attempts
-  message: 'Too many login attempts, please try again later.',
+   message: {
+    error: "Too many login attempts",
+    message: "Please try again later.",
+    retryAfter: "15 minutes"
+  },
   standardHeaders: true, 
   legacyHeaders: false,
 });
