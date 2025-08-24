@@ -64,6 +64,13 @@ const AdminLogin = {
   },
   async adminCodeG(req, res) {
     try {
+      const { plan } = req.body;
+      if(!plan){
+        return res.status(400).json({
+          status:400,
+          message:"All fields are required"
+        })
+      }
       const adminId = req.user?.id; // assume JWT middleware adds user
       if (!adminId) {
         return res.status(401).json({
@@ -82,14 +89,15 @@ const AdminLogin = {
       const validityValue = process.env.PROJECT_TYPE === "prod" ? false : 0;
 
       await db.query(
-        `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity, admin_id)
-       VALUES ($1, $2, $3, $4, $5)`,
+        `INSERT INTO admin_codes (adm_codes, creation_time, expires_at, validity, admin_id,plan)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
         [
           code,
           now.toISOString(),
           expiresAt,
           validityValue,
           adminId,
+          plan
         ]
       );
 

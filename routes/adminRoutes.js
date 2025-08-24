@@ -11,9 +11,12 @@ const loginLimiter = rateLimit({
   max: 7,
   standardHeaders: true,
   legacyHeaders: false,
-  message: "Too many login attempts, please try again later.",
+  message: {
+    error: "Too many login attempts",
+    message: "Please try again later.",
+    retryAfter: "15 minutes"
+  }
 });
-
 //Routes…
 router.post("/forgot-password", loginLimiter, adminForgotPassword);
 router.post("/login", loginLimiter, AdmLn.AdminLogin);

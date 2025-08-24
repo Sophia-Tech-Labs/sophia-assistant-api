@@ -1,15 +1,16 @@
-/* Alter the tables of both sqlite and postgres to add those premium stuff.. request schema
-from both sqlit and postgres and use ai to compare which is missing and alter 
+/* Add the premium details table to have 2 connection stats.. cross check for incase there are any issues
+with the subscription
  */
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const devPath = path.join(__dirname, 'dev.js');
-const db = fs.existsSync(devPath) ? require('./dev') : require('./prod');
+const devPath = path.join(__dirname, "dev.js");
+const db = fs.existsSync(devPath) ? require("./dev") : require("./prod");
 
 const isDev = fs.existsSync(devPath);
 
-const createTableSQL = isDev ? `CREATE TABLE IF NOT EXISTS super_admins (
+const createTableSQL = isDev
+  ? `CREATE TABLE IF NOT EXISTS super_admins (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
@@ -18,7 +19,8 @@ const createTableSQL = isDev ? `CREATE TABLE IF NOT EXISTS super_admins (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
    reset_token TEXT,
   reset_token_expires TEXT
-);` : `CREATE TABLE IF NOT EXISTS super_admins (
+);`
+  : `CREATE TABLE IF NOT EXISTS super_admins (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
@@ -29,7 +31,8 @@ const createTableSQL = isDev ? `CREATE TABLE IF NOT EXISTS super_admins (
   reset_token_expires TEXT
 );`;
 
-const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
+const createAdminSQLTable = isDev
+  ? `CREATE TABLE IF NOT EXISTS admins(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT NOT NULL,
 	email TEXT NOT NULL UNIQUE,
@@ -42,7 +45,8 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	 reset_token TEXT,
   reset_token_expires TEXT
 	
-);` : `CREATE TABLE IF NOT EXISTS admins(
+);`
+  : `CREATE TABLE IF NOT EXISTS admins(
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
 	email TEXT NOT NULL UNIQUE,
@@ -57,52 +61,101 @@ const createAdminSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS admins(
 	
 );`;
 
-const createAdminCodeSQLTable = isDev ? `
+const createAdminCodeSQLTable = isDev
+  ? `
 CREATE TABLE IF NOT EXISTS admin_codes(
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   adm_codes TEXT NOT NULL,
   creation_time TEXT NOT NULL,
   expires_at TEXT NOT NULL,
+  plan TEXT NOT NULL DEFAULT 'lite',
   validity BOOLEAN DEFAULT 1,
   admin_id INTEGER NOT NULL,
   FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
-);` : `
+);`
+  : `
 CREATE TABLE IF NOT EXISTS admin_codes(
   id SERIAL PRIMARY KEY,
   adm_codes TEXT NOT NULL,
   creation_time TEXT NOT NULL,
+  plan TEXT NOT NULL DEFAULT 'lite',
   expires_at TEXT NOT NULL,
   validity BOOLEAN DEFAULT TRUE,
   admin_id INTEGER NOT NULL,
   FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );`;
 
-const createUserSQLTable = isDev ? `
+const createSubscriptionTable = isDev
+  ? `
+CREATE TABLE IF NOT EXISTS subscriptions(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+user_id INTEGER NOT NULL UNIQUE,
+plan TEXT NOT NULL DEFAULT 'lite',
+status TEXT DEFAULT 'active',
+bot_status TEXT DEFAULT 'inactive',
+last_connected TEXT DEFAULT 'Never',
+is_linked BOOLEAN DEFAULT 0,
+is_connected BOOLEAN DEFAULT 0,
+expiry TEXT NOT NULL,
+created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+`
+  : `
+CREATE TABLE IF NOT EXISTS subscriptions(
+id SERIAL PRIMARY KEY,
+user_id INTEGER NOT NULL UNIQUE,
+plan TEXT NOT NULL DEFAULT 'lite',
+status TEXT DEFAULT 'active',
+bot_status TEXT DEFAULT 'inactive',
+last_connected TEXT DEFAULT 'Never',
+is_linked BOOLEAN DEFAULT false,
+is_connected BOOLEAN DEFAULT false,
+expiry TEXT NOT NULL,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+);
+`;
+const createPremiumDetailsTable = isDev
+  ? `
+  CREATE TABLE IF NOT EXISTS premium_details(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL UNIQUE,
+  is_premium_linked BOOLEAN DEFAULT 0, 
+  last_premium_connected TEXT DEFAULT 'Never',
+  premium_bot_status TEXT DEFAULT 'inactive',
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+  `: `
+  CREATE TABLE IF NOT EXISTS premium_details(
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL UNIQUE,
+  is_premium_linked BOOLEAN DEFAULT false, 
+  last_premium_connected TEXT DEFAULT 'Never',
+  premium_bot_status TEXT DEFAULT 'inactive',
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+  `;
+const createUserSQLTable = isDev
+  ? `
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   main_phone TEXT NOT NULL,
-  is_premium BOOLEAN DEFAULT 0,
-  is_premium_connected BOOLEAN DEFAULT 0,
-  is_premium_linked BOOLEAN DEFAULT 0,
-  premium_last_connected TEXT DEFAULT "Never",
-  premium_status TEXT DEFAULT "inactive",
   assistant_phone TEXT NOT NULL,
   admin_code TEXT NOT NULL,
-  is_connected BOOLEAN DEFAULT 0,
   reset_token TEXT,
   reset_token_expires TEXT,
-  is_linked BOOLEAN DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   api_key TEXT UNIQUE,
-  status TEXT DEFAULT "inactive",
-  last_connected TEXT DEFAULT "Never",
   bot_name TEXT DEFAULT "Sophia",
   admin_id INTEGER,
   FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
-  );` : `
+  );`
+  : `
   CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
@@ -111,37 +164,31 @@ CREATE TABLE IF NOT EXISTS users (
   main_phone TEXT NOT NULL,
   assistant_phone TEXT NOT NULL,
   admin_code TEXT NOT NULL,
-  is_connected BOOLEAN DEFAULT false,
   reset_token TEXT,
-  is_premium BOOLEAN DEFAULT false,
-  is_premium_connected BOOLEAN DEFAULT false,
-  is_premium_linked BOOLEAN DEFAULT false,
-  premium_last_connected TEXT DEFAULT 'Never',
-  premium_status TEXT DEFAULT 'inactive',
   reset_token_expires TEXT,
-  is_linked BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   api_key TEXT UNIQUE,
-  status TEXT DEFAULT 'inactive',
-  last_connected TEXT DEFAULT 'Never',
   bot_name TEXT DEFAULT 'Sophia',
   admin_id INTEGER,
   FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE SET NULL
 );`;
 
-const createMainSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS main_sessions (
+const createMainSessionSQLTable = isDev
+  ? `CREATE TABLE IF NOT EXISTS main_sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL UNIQUE,
   creds TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);` : `CREATE TABLE IF NOT EXISTS main_sessions (
+);`
+  : `CREATE TABLE IF NOT EXISTS main_sessions (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL UNIQUE,
   creds TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );`;
 
-const createMainKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS main_keys (
+const createMainKeysSQLTable = isDev
+  ? `CREATE TABLE IF NOT EXISTS main_keys (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   category TEXT NOT NULL,
   key_id TEXT NOT NULL,
@@ -152,7 +199,8 @@ const createMainKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS main_keys (
 
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (session_id) REFERENCES main_sessions(id) ON DELETE CASCADE
-);` : `CREATE TABLE IF NOT EXISTS main_keys (
+);`
+  : `CREATE TABLE IF NOT EXISTS main_keys (
   id SERIAL PRIMARY KEY,
   category TEXT NOT NULL,
   key_id TEXT NOT NULL,
@@ -164,21 +212,22 @@ const createMainKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS main_keys (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (session_id) REFERENCES main_sessions(id) ON DELETE CASCADE
 );`;
-const createSessionSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS sessions (
+const createSessionSQLTable = isDev
+  ? `CREATE TABLE IF NOT EXISTS sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL UNIQUE,
   creds TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);` : `CREATE TABLE IF NOT EXISTS sessions (
+);`
+  : `CREATE TABLE IF NOT EXISTS sessions (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL UNIQUE,
   creds TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );`;
 
-
-
-const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
+const createKeysSQLTable = isDev
+  ? `CREATE TABLE IF NOT EXISTS keys (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   category TEXT NOT NULL,
   key_id TEXT NOT NULL,
@@ -189,7 +238,8 @@ const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
 
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
-);` : `CREATE TABLE IF NOT EXISTS keys (
+);`
+  : `CREATE TABLE IF NOT EXISTS keys (
   id SERIAL PRIMARY KEY,
   category TEXT NOT NULL,
   key_id TEXT NOT NULL,
@@ -202,7 +252,8 @@ const createKeysSQLTable = isDev ? `CREATE TABLE IF NOT EXISTS keys (
   FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
 );`;
 
-const createChatHistorySQLTable = isDev ? `CREATE TABLE IF NOT EXISTS chat_history(
+const createChatHistorySQLTable = isDev
+  ? `CREATE TABLE IF NOT EXISTS chat_history(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
 chat_id TEXT NOT NULL,
 role TEXT NOT NULL,
@@ -210,7 +261,8 @@ content TEXT NOT NULL,
 user_id INTEGER,
 timestamp DATETIME,
 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE 
-)`: `CREATE TABLE IF NOT EXISTS chat_history (
+)`
+  : `CREATE TABLE IF NOT EXISTS chat_history (
   id SERIAL PRIMARY KEY,
   chat_id TEXT NOT NULL,
   role TEXT NOT NULL,
@@ -218,24 +270,26 @@ FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   user_id INTEGER,
   timestamp TIMESTAMP,
   CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-);`
+);`;
 
 // Automatically run table setup
-async function createTable (){
+async function createTable() {
   try {
-   await db.query(createTableSQL),
-   await db.query(createAdminSQLTable),
-   await db.query(createUserSQLTable),
-    await db.query(createAdminCodeSQLTable),
-       await db.query(createSessionSQLTable);
-    	await db.query(createKeysSQLTable);
-       await db.query(createMainSessionSQLTable);
-    	await db.query(createMainKeysSQLTable);
-    	await db.query(createChatHistorySQLTable);
+    await db.query(createTableSQL),
+      await db.query(createAdminSQLTable),
+      await db.query(createUserSQLTable),
+      await db.query(createAdminCodeSQLTable),
+      await db.query(createSessionSQLTable);
+    await db.query(createKeysSQLTable);
+    await db.query(createMainSessionSQLTable);
+    await db.query(createMainKeysSQLTable);
+    await db.query(createChatHistorySQLTable);
+    await db.query(createSubscriptionTable);
+    await db.query(createPremiumDetailsTable);
 
-    console.log(`[DB] Users table ready (${isDev ? 'SQLite' : 'PostgreSQL'})`);
+    console.log(`[DB] Users table ready (${isDev ? "SQLite" : "PostgreSQL"})`);
   } catch (err) {
-    console.error('[DB] Error creating table:', err);
+    console.error("[DB] Error creating table:", err);
   }
 }
 createTable();

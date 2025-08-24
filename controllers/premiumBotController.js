@@ -20,20 +20,22 @@ async function mainPairCodeG(req, res) {
   ]);
   const apikey = users[0].api_key;
 
+  // ✅ FIX: Query premium_details table for premium connection status
   const userStatus = await db.query(
-        "SELECT * FROM users WHERE api_key = $1",
-        [apikey]
-      );
+    "SELECT p.is_premium_linked, s.plan FROM premium_details p JOIN subscriptions s ON p.user_id = s.user_id JOIN users u ON p.user_id = u.id WHERE u.api_key = $1",
+    [apikey]
+  );
 
-  const isConnected = userStatus[0]?.is_premium_connected;
-  const isPremium = userStatus[0].is_premium;
+  const isConnected = userStatus[0]?.is_premium_linked;
+  const isPremium = userStatus[0]?.plan !== 'lite'; // Check if plan is not lite
 
-  if(!isPremium){
+  if (!isPremium) {
     return res.status(403).json({
-      status:403,
-      message:"User is Not premium.. Access Denied"
-    })
+      status: 403,
+      message: "User is Not premium.. Access Denied"
+    });
   }
+
   let num = await db.query(
     "SELECT main_phone FROM users WHERE api_key = $1",
     [apikey]
@@ -45,14 +47,16 @@ async function mainPairCodeG(req, res) {
       message: "ApiKey not Valid",
     });
   }
-  if(isConnected){
-     res.json({
-            status: 200,
-            message: "Bot is already connected",
-            connected: true,
-          });
-          return;
+  
+  if (isConnected) {
+    res.json({
+      status: 200,
+      message: "Premium Bot is already connected",
+      connected: true,
+    });
+    return;
   }
+  
   num = num[0].main_phone;
 
   async function initializePairingSession() {
@@ -68,7 +72,7 @@ async function mainPairCodeG(req, res) {
 
       // If not registered OR not connected in DB, generate new pairing code
       if (!sock.authState.creds.registered && !isConnected) {
-        console.log("Requesting pairing code...");
+        console.log("Requesting premium pairing code...");
         await delay(1500);
         const formNum = num.replace(/[^0-9]/g, "");
         var code = await sock.requestPairingCode(formNum);
@@ -80,7 +84,7 @@ async function mainPairCodeG(req, res) {
         if (!res.headersSent) {
           res.json({
             status: 200,
-            message: "Bot is already connected",
+            message: "Premium Bot is already connected",
             connected: true,
           });
         }
@@ -94,33 +98,45 @@ async function mainPairCodeG(req, res) {
         try {
           const { connection, lastDisconnect } = update;
           if (connection === "open") {
-            const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
             await delay(5000);
-            await db.query("UPDATE users SET premium_status = $1 WHERE api_key = $2", [
-              "connecting",
-              apikey,
-            ])
+            
+            // ✅ FIX: Update premium_details table instead of users
             await db.query(
-              "UPDATE users SET is_premium_connected = $1 WHERE api_key = $2",
-              [trueBool, apikey]
+              "UPDATE premium_details SET premium_bot_status = $1 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $2",
+              ["connecting", apikey]
             );
+            
+            // ✅ FIX: Update is_premium_linked in premium_details table
+            await db.query(
+              "UPDATE premium_details SET is_premium_linked = $1, last_premium_connected = $2 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $3",
+              [trueBool, new Date().toISOString(), apikey]
+            );
+            
             await sock.end();
           } else if (connection === "close") {
             const reason = lastDisconnect?.error?.output?.statusCode;
-            console.log("❌ Connection closed:", reason);
-  
+            console.log("❌ Premium connection closed:", reason);
+
             if (reason === DisconnectReason.restartRequired) {
               console.log("♻️ Restart required, reconnecting...");
               initializePairingSession(); // call your session function again
-             } 
+            } else {
+              // ✅ FIX: Update disconnection status in premium_details table
+              await db.query(
+                "UPDATE premium_details SET premium_bot_status = $1, is_premium_linked = $2 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $3",
+                ["inactive", falseBool, apikey]
+              );
+            }
           }
         } catch (error) {
-          console.error("⚠️ Connection.update error caught(pairing section): ",error)
+          console.error(
+            "⚠️ Connection.update error caught(premium pairing section): ",
+            error
+          );
         }
       });
-
     } catch (error) {
-      console.error("Pairing Error ", error);
+      console.error("Premium Pairing Error ", error);
     }
   }
   initializePairingSession();
@@ -132,28 +148,29 @@ async function generateMainQRCode(req, res) {
   ]);
   const apikey = users[0].api_key;
 
-const userStatus = await db.query(
-        "SELECT * FROM users WHERE api_key = $1",
-        [apikey]
-      );
+  // ✅ FIX: Query premium_details and subscriptions tables for status
+  const userStatus = await db.query(
+    "SELECT p.is_premium_linked, s.plan FROM premium_details p JOIN subscriptions s ON p.user_id = s.user_id JOIN users u ON p.user_id = u.id WHERE u.api_key = $1",
+    [apikey]
+  );
 
-  const isConnected = userStatus[0]?.is_premium__connected;
-  const isPremium = userStatus[0].is_premium;
+  const isConnected = userStatus[0]?.is_premium_linked;
+  const isPremium = userStatus[0]?.plan !== 'lite';
 
-  if(!isPremium){
+  if (!isPremium) {
     return res.status(403).json({
-      status:403,
-      message:"User is Not premium.. Access Denied"
-    })
+      status: 403,
+      message: "User is Not premium.. Access Denied"
+    });
   }
 
-  if(isConnected){
-     res.json({
-            status: 200,
-            message: "Bot is already connected",
-            connected: true,
-          });
-          return;
+  if (isConnected) {
+    res.json({
+      status: 200,
+      message: "Premium Bot is already connected",
+      connected: true,
+    });
+    return;
   }
   
   async function initializeQRSession() {
@@ -165,25 +182,17 @@ const userStatus = await db.query(
         browser: Browsers.macOS("Safari"),
         markOnlineOnConnect: true,
         msgRetryCounterCache,
-        printQRInTerminal: false, // ✅ Don't print in terminal
+        printQRInTerminal: false,
       });
 
-      // Check if already connected
-      const userStatus = await db.query(
-        "SELECT is_premium_connected FROM users WHERE api_key = $1",
-        [apikey]
-      );
-      
       if (!sock.authState.creds.registered || !isConnected) {
-        console.log("Generating QR code...");
-        
-        // Listen for QR code
+        console.log("Generating premium QR code...");
+
         sock.ev.on("connection.update", async (update) => {
           try {
             const { connection, lastDisconnect, qr } = update;
-      
+
             if (qr && !res.headersSent) {
-              // ✅ Generate QR code as base64 image
               try {
                 const qrCodeDataURL = await qrcode.toDataURL(qr, {
                   errorCorrectionLevel: "M",
@@ -196,10 +205,10 @@ const userStatus = await db.query(
                   },
                   width: 256,
                 });
-      
+
                 res.json({
                   method: "qr_code",
-                  qr: qrCodeDataURL, // base64 data URL
+                  qr: qrCodeDataURL,
                   message: "Scan this QR code with WhatsApp",
                 });
               } catch (qrError) {
@@ -210,38 +219,51 @@ const userStatus = await db.query(
                 });
               }
             }
-      
+
             if (connection === "open") {
               await delay(5000);
-              await db.query("UPDATE users SET premium_status = $1 WHERE api_key = $2", [
-                "connecting",
-                apikey,
-              ]);
-              console.log("Status change Successful")
+              
+              // ✅ FIX: Update premium_details table instead of users
               await db.query(
-                "UPDATE users SET is_premium_connected = $1 WHERE api_key = $2",
-                [trueBool, apikey]
+                "UPDATE premium_details SET premium_bot_status = $1 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $2",
+                ["connecting", apikey]
               );
+              console.log("Premium Status change Successful");
+              
+              // ✅ FIX: Update is_premium_linked in premium_details table
+              await db.query(
+                "UPDATE premium_details SET is_premium_linked = $1, last_premium_connected = $2 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $3",
+                [trueBool, new Date().toISOString(), apikey]
+              );
+              
               await sock.end();
             } else if (connection === "close") {
               const reason = lastDisconnect?.error?.output?.statusCode;
-              console.log("❌ Connection closed:", reason);
-      
+              console.log("❌ Premium connection closed:", reason);
+
               if (reason === DisconnectReason.restartRequired) {
                 console.log("♻️ Restart required, reconnecting...");
-                initializeQRSession(); // call your session function again
-              } 
+                initializeQRSession();
+              } else {
+                // ✅ FIX: Update disconnection status in premium_details table
+                await db.query(
+                  "UPDATE premium_details SET premium_bot_status = $1, is_premium_linked = $2 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $3",
+                  ["inactive", falseBool, apikey]
+                );
+              }
             }
-            
           } catch (error) {
-            console.error("⚠️ Connection.update error caught(qr section):",error)
+            console.error(
+              "⚠️ Connection.update error caught(premium qr section):",
+              error
+            );
           }
         });
       } else {
         if (!res.headersSent) {
           res.json({
             status: 200,
-            message: "Bot is already connected",
+            message: "Premium Bot is already connected",
             connected: true,
           });
         }
@@ -251,7 +273,7 @@ const userStatus = await db.query(
         await saveCreds();
       });
     } catch (error) {
-      console.error("QR Error ", error);
+      console.error("Premium QR Error ", error);
       if (!res.headersSent) {
         res.status(500).json({
           status: 500,
@@ -263,10 +285,10 @@ const userStatus = await db.query(
   initializeQRSession();
 }
 
-// ✅ Add this function to clear sessions
+// ✅ FIX: Update clearUserSession to use premium_details table
 async function clearUserSession(apiKey) {
   try {
-    // Clear sessions and keys for this user
+    // Clear premium sessions and keys for this user
     await db.query(
       "DELETE FROM main_sessions WHERE user_id = (SELECT id FROM users WHERE api_key = $1)",
       [apiKey]
@@ -275,18 +297,19 @@ async function clearUserSession(apiKey) {
       "DELETE FROM main_keys WHERE user_id = (SELECT id FROM users WHERE api_key = $1)",
       [apiKey]
     );
-    // Reset connection status
+    
+    // ✅ FIX: Reset premium connection status in premium_details table
     await db.query(
-      "UPDATE users SET is_premium_connected = $1, premium_status = $2 WHERE api_key = $3",
-      [falseBool, "inactive", apiKey]
+      "UPDATE premium_details SET is_premium_linked = $1, premium_bot_status = $2, last_premium_connected = $3 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $4",
+      [falseBool, "inactive", "Never", apiKey]
     );
-    console.log("Session cleared for user");
+    
+    console.log("Premium session cleared for user");
   } catch (error) {
-    console.error("Error clearing session:", error);
+    console.error("Error clearing premium session:", error);
   }
 }
 
-// ✅ Add endpoint to manually reset connection
 async function resetPremiumBotConnection(req, res) {
   try {
     const users = await db.query("SELECT api_key FROM users WHERE id = $1", [
@@ -298,7 +321,7 @@ async function resetPremiumBotConnection(req, res) {
 
     res.json({
       status: 200,
-      message: "Bot connection reset. You can now pair again.",
+      message: "Premium Bot connection reset. You can now pair again.",
     });
   } catch (error) {
     console.error(error);
@@ -311,14 +334,17 @@ async function resetPremiumBotConnection(req, res) {
 
 async function getPremiumBotStatus(req, res) {
   try {
+    // ✅ FIX: Query premium_details table for premium connection status
     const userInfo = await db.query(
-      "SELECT is_premium_connected,premium_status FROM users WHERE id = $1",
+      "SELECT p.is_premium_linked, p.premium_bot_status, s.plan FROM premium_details p JOIN subscriptions s ON p.user_id = s.user_id JOIN users u ON p.user_id = u.id WHERE u.id = $1",
       [req.user.id]
     );
+    
     res.json({
       status: 200,
-      connected: Boolean(userInfo[0].is_premium_connected),
-      botStatus:userInfo[0].premium_status
+      connected: Boolean(userInfo[0].is_premium_linked),
+      botStatus: userInfo[0].premium_bot_status,
+      plan: userInfo[0].plan,
     });
   } catch (error) {
     console.error(error);

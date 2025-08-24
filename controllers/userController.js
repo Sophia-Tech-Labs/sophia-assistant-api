@@ -67,14 +67,14 @@ const userSignup = async (req, res) => {
 
     // 4. Get admin ID from code row
     const adminId = adminCodeData.admin_id;
-
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     // 5. Insert user with `admin_id`
     const insertQuery = `
       INSERT INTO users (name, email, password, main_phone, assistant_phone, admin_code, admin_id, api_key)
-      VALUES ($1, $2, $3, $4, $5, $6, $7,$8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7,$8) RETURNING *;
     `;
     const sophiaApiKey = generateApiKey();
-    await db.query(insertQuery, [
+   const users = await db.query(insertQuery, [
       name,
       email,
       hashedPassword,
@@ -84,7 +84,9 @@ const userSignup = async (req, res) => {
       adminId,
       sophiaApiKey,
     ]);
+// console.log(users)
 
+    await db.query("INSERT INTO subscriptions (user_id, plan, expiry) VALUES ($1,$2,$3)",[users[0]?.id,adminCodeData.plan,expiresAt])
     // 6. Delete the used code
     await db.query("DELETE FROM admin_codes WHERE adm_codes = $1", [adminCode]);
 
@@ -167,19 +169,21 @@ async function userDashboard(req, res) {
     const info = await db.query("SELECT * FROM users WHERE id = $1", [
       req.user.id,
     ]);
-
-    
+    const botInfo = await db.query("SELECT * FROM subscriptions WHERE user_id = $1",[req.user.id])
+    // console.log(botInfo)
+    const isPremium = botInfo[0].plan === "premium"
     res.json({
       botStatus: {
-        isLinked: Boolean(info[0].is_linked),
-        status: info[0].status,
-        lastConnected: info[0].last_connected,
+        isLinked: Boolean(botInfo[0].is_linked),
+        status: botInfo[0].bot_status,
+        lastConnected: botInfo[0].last_connected,
         botName: info[0].bot_name,
       },
       userInfo: {
         name: info[0].name,
         email: info[0].email,
-        isPremium:info[0].is_premium
+        plan:botInfo[0].plan,
+        isPremium
       },
     });
   } catch (err) {
@@ -192,27 +196,39 @@ async function userDashboard(req, res) {
 }
 async function premiumUserDashboard(req, res) {
   try {
-    const info = await db.query("SELECT * FROM users WHERE id = $1", [
-      req.user.id,
-    ]);
+    // ✅ FIX: JOIN tables to get correct data
+    const info = await db.query(
+      `SELECT u.name, u.email, u.bot_name, s.plan, 
+              p.is_premium_linked, p.premium_bot_status, p.last_premium_connected
+       FROM users u 
+       JOIN subscriptions s ON u.id = s.user_id 
+       LEFT JOIN premium_details p ON u.id = p.user_id 
+       WHERE u.id = $1`,
+      [req.user.id]
+    );
 
-    if(!info[0].is_premium){
+    // ✅ FIX: Check premium status - only 'premium' plan is premium
+    const isPremium = info[0].plan === 'premium';
+    
+    if (!isPremium) {
       return res.status(403).json({
-        status:403,
-        message:"You are not a premium User, Access denied"
-      })
+        status: 403,
+        message: "You are not a premium User, Access denied"
+      });
     }
+    
     res.json({
       botStatus: {
-        isLinked: Boolean(info[0].is_premium_linked),
-        status: info[0].premium_status,
-        lastConnected: info[0].premium_last_connected,
+        isLinked: Boolean(info[0].is_premium_linked), // ✅ Back to isLinked
+        status: info[0].premium_bot_status,
+        lastConnected: info[0].last_premium_connected,
         botName: info[0].bot_name,
       },
       userInfo: {
         name: info[0].name,
         email: info[0].email,
-        isPremium:Boolean(info[0].is_premium)
+        isPremium: isPremium,
+        plan: info[0].plan, // ✅ Also include plan
       },
     });
   } catch (err) {
@@ -223,7 +239,6 @@ async function premiumUserDashboard(req, res) {
     });
   }
 }
-
 async function getPhoneNumber(req,res) {
   const { bot } = req.body;
   if(!bot){
