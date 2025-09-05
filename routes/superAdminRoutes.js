@@ -6,7 +6,7 @@ const superAdminMd = require("../middlewares/authMiddleware.js");
 const {superAdminResetPassword, superAdminForgotPassword} = require("../lib/test");
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 7, // limit each IP to 5 login attempts
+  max: 7,
    message: {
     error: "Too many login attempts",
     message: "Please try again later.",

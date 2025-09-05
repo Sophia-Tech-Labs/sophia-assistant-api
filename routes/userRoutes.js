@@ -28,6 +28,8 @@ router.post("/forgot-password",loginLimiter,userForgotPassword);
 router.post("/reset-password",loginLimiter,userResetPassword);
 router.post("/pair",middleware.verifyUser,paymentMiddleware,pairCodeG);
 router.post("/qr-code",middleware.verifyUser,paymentMiddleware,generateQRCode);
+router.post("/lite-pair",middleware.verifyUser,paymentMiddleware,pairCodeG);
+router.post("/lite-qr-code",middleware.verifyUser,paymentMiddleware,generateQRCode);
 router.post("/reset-bot",middleware.verifyUser,resetBotConnection);
 router.post("/bot-status",middleware.verifyUser,getBotStatus);
 router.post("/get-phone",middleware.verifyUser,getPhoneNumber);

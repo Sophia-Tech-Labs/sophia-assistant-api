@@ -102,12 +102,6 @@ async function pairCodeG(req, res) {
               [trueBool, new Date().toISOString(), apikey]
             );
             
-            // ✅ BONUS: Also update premium_details if exists
-            await db.query(
-              "UPDATE premium_details SET is_premium_linked = $1, last_premium_connected = $2, premium_bot_status = $3 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $4",
-              [trueBool, new Date().toISOString(), "connected", apikey]
-            );
-            
             await sock.end();
           } else if (connection === "close") {
             const reason = lastDisconnect?.error?.output?.statusCode;
@@ -116,18 +110,14 @@ async function pairCodeG(req, res) {
             if (reason === DisconnectReason.restartRequired) {
               console.log("♻️ Restart required, reconnecting...");
               initializePairingSession(); // call your session function again
-            } else {
+            } /* else {
               // ✅ FIX: Update disconnection status in correct tables
               await db.query(
                 "UPDATE subscriptions SET bot_status = $1, is_connected = $2 FROM users WHERE subscriptions.user_id = users.id AND users.api_key = $3",
                 ["inactive", falseBool, apikey]
               );
               
-              await db.query(
-                "UPDATE premium_details SET premium_bot_status = $1, is_premium_linked = $2 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $3",
-                ["inactive", falseBool, apikey]
-              );
-            }
+            } */
           }
         } catch (error) {
           console.error(
@@ -229,11 +219,6 @@ async function generateQRCode(req, res) {
                 [trueBool, new Date().toISOString(), apikey]
               );
               
-              // ✅ BONUS: Also update premium_details
-              await db.query(
-                "UPDATE premium_details SET is_premium_linked = $1, last_premium_connected = $2, premium_bot_status = $3 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $4",
-                [trueBool, new Date().toISOString(), "connected", apikey]
-              );
               
               await sock.end();
             } else if (connection === "close") {
@@ -249,11 +234,7 @@ async function generateQRCode(req, res) {
                   "UPDATE subscriptions SET bot_status = $1, is_connected = $2 FROM users WHERE subscriptions.user_id = users.id AND users.api_key = $3",
                   ["inactive", falseBool, apikey]
                 );
-                
-                await db.query(
-                  "UPDATE premium_details SET premium_bot_status = $1, is_premium_linked = $2 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $3",
-                  ["inactive", falseBool, apikey]
-                );
+               
               }
             }
           } catch (error) {
@@ -305,12 +286,6 @@ async function clearUserSession(apiKey) {
     // ✅ FIX: Reset connection status in subscriptions table
     await db.query(
       "UPDATE subscriptions SET is_connected = $1, bot_status = $2, last_connected = $3 FROM users WHERE subscriptions.user_id = users.id AND users.api_key = $4",
-      [falseBool, "inactive", "Never", apiKey]
-    );
-    
-    // ✅ FIX: Reset premium status in premium_details table
-    await db.query(
-      "UPDATE premium_details SET is_premium_linked = $1, premium_bot_status = $2, last_premium_connected = $3 FROM users WHERE premium_details.user_id = users.id AND users.api_key = $4",
       [falseBool, "inactive", "Never", apiKey]
     );
     
