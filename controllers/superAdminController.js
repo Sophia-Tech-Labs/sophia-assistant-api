@@ -402,8 +402,8 @@ const superAdminFunctions = {
         [trueBool]
       );
       const premium = await db.query(
-        "SELECT * FROM users WHERE is_premium = $1",
-        [trueBool]
+        "SELECT * FROM subscription WHERE plan = $1",
+        ["premium"]
       );
 
       // Fetch first 3 admins (adjust the query if needed)
