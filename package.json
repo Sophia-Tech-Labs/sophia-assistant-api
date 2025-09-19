@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.18",
     "baileys": "github:WhiskeySockets/Baileys",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^11.10.0",
