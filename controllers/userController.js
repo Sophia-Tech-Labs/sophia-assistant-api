@@ -239,6 +239,30 @@ async function premiumUserDashboard(req, res) {
     });
   }
 }
+
+async function editBotInfo(req,res) {
+  const { botName } = req.body;
+  if(!botName){
+    return res.status(400).json({
+      status:400,
+      message:"All fields are required"
+    })
+  }
+  try {
+    await db.query("UPDATE users SET bot_name = $1 WHERE id = $2",[botName,req.user.id]);
+    res.status(200).json({
+      status:200,
+      message:"Bot name change Successful"
+    })
+  } catch (error) {
+    console.error("BotName change Error: ",error);
+    res.status(500).json({
+      status:500,
+      message:"Internal Server Error"
+    })
+  }
+}
+
 async function getPhoneNumber(req,res) {
   const { bot } = req.body;
   if(!bot){
@@ -288,4 +312,4 @@ async function getPhoneNumber(req,res) {
       })
     }
   }
-module.exports = { userSignup, userLogin,getPhoneNumber,userDashboard,getApiKey,premiumUserDashboard };
+module.exports = { userSignup,editBotInfo,userLogin,getPhoneNumber,userDashboard,getApiKey,premiumUserDashboard };

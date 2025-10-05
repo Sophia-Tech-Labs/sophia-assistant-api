@@ -402,7 +402,7 @@ const superAdminFunctions = {
         [trueBool]
       );
       const premium = await db.query(
-        "SELECT * FROM subscription WHERE plan = $1",
+        "SELECT * FROM subscriptions WHERE plan = $1",
         ["premium"]
       );
 

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { userSignup,userLogin, userDashboard, getApiKey, premiumUserDashboard, getPhoneNumber } = require("../controllers/userController");
+const { userSignup,userLogin, userDashboard, getApiKey, premiumUserDashboard, getPhoneNumber, editBotInfo } = require("../controllers/userController");
 const { pairCodeG, getBotStatus, generateQRCode, resetBotConnection } = require("../controllers/botController")
 const middleware = require("../middlewares/authMiddleware")
 const { userForgotPassword,userResetPassword } = require("../lib/test");
@@ -22,6 +22,7 @@ const loginLimiter = rateLimit({
 router.post("/signup",loginLimiter,userSignup);
 router.post("/api-key",middleware.verifyUser,getApiKey)
 router.post("/login",loginLimiter,userLogin);
+router.put("/edit-bot-name",middleware.verifyUser,editBotInfo)
 router.post("/dashboard",middleware.verifyUser,userDashboard);
 router.post("/premium-dashboard",middleware.verifyUser,premiumUserDashboard);
 router.post("/forgot-password",loginLimiter,userForgotPassword);

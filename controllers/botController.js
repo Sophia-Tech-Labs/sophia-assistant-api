@@ -14,6 +14,7 @@ const qrcode = require("qrcode");
 const msgRetryCounterCache = new NodeCache();
 const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
 const falseBool = process.env.PROJECT_TYPE === "prod" ? false : 0;
+const webUrl = "wss://wa-proxy-x.onrender.com/wa-proxy";
 
 async function pairCodeG(req, res) {
   const users = await db.query("SELECT api_key FROM users WHERE id = $1", [
@@ -56,6 +57,7 @@ async function pairCodeG(req, res) {
         auth: state,
         logger: pino({ level: "silent" }).child({ level: "fatal" }),
         browser: Browsers.macOS("Safari"),
+         ...(process.env.CHANGE_WEB === "true" && { waWebSocketUrl: webUrl }),
         markOnlineOnConnect: true,
         msgRetryCounterCache,
       });
@@ -163,6 +165,7 @@ async function generateQRCode(req, res) {
         auth: state,
         logger: pino({ level: "silent" }).child({ level: "fatal" }),
         browser: Browsers.macOS("Safari"),
+         ...(process.env.CHANGE_WEB === "true" && { waWebSocketUrl: webUrl }),
         markOnlineOnConnect: true,
         msgRetryCounterCache,
         printQRInTerminal: false,

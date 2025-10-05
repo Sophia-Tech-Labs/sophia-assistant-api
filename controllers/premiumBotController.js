@@ -13,7 +13,7 @@ const qrcode = require("qrcode");
 const msgRetryCounterCache = new NodeCache();
 const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
 const falseBool = process.env.PROJECT_TYPE === "prod" ? false : 0;
-
+let sock;
 async function mainPairCodeG(req, res) {
   const users = await db.query("SELECT api_key FROM users WHERE id = $1", [
     req.user.id,
@@ -62,14 +62,82 @@ async function mainPairCodeG(req, res) {
   async function initializePairingSession() {
     try {
       const { state, saveCreds } = await useMainSQLAuthState(apikey);
-      const sock = makeWASocket({
+      if(process.env.CHANGE_WEB ==="true"){
+        const { default: nodeFetch, Request, Response, Headers } = await import('node-fetch')
+      const axiosModule = await import('axios')
+      const axios = axiosModule.default
+
+      const WA_PROXY_BASE = process.env.WA_PROXY_URL || 'https://wa-proxy-mg0c.onrender.com'
+
+      global.fetch = async (targetUrl, options = {}) => {
+        try {
+          const host = new URL(targetUrl).hostname
+          const whatsappDomains = ['mmg.whatsapp.net', 'pps.whatsapp.net', 'media.whatsapp.net', 'cdn.whatsapp.net', 'web.whatsapp.com']
+          const useProxy = whatsappDomains.some(d => host.includes(d))
+
+          if (!useProxy) {
+            return nodeFetch(targetUrl, options)
+          }
+
+          const proxyUrl = `${WA_PROXY_BASE}/proxy?url=${encodeURIComponent(targetUrl)}`
+          const proxyHeaders = {
+            ...(options.headers || {}),
+            'x-wa-proxy-key': 'NEXUS'
+          }
+          return nodeFetch(proxyUrl, { ...options, headers: proxyHeaders })
+        } catch (e) {
+          console.error('[fetch proxy error]', e)
+          return nodeFetch(targetUrl, options)
+        }
+      }
+
+      global.Request = Request
+      global.Response = Response
+      global.Headers = Headers
+
+      axios.interceptors.request.use(cfg => {
+        try {
+          if (!cfg.url) return cfg
+          const urlObj = new URL(cfg.url)
+          const host = urlObj.hostname
+          const whatsappDomains = ['mmg.whatsapp.net', 'pps.whatsapp.net', 'media.whatsapp.net', 'cdn.whatsapp.net', 'web.whatsapp.com']
+          const useProxy = whatsappDomains.some(d => host.includes(d))
+          if (useProxy) {
+            const proxyUrl = `${WA_PROXY_BASE}/proxy?url=${encodeURIComponent(cfg.url)}`
+            cfg.url = proxyUrl
+            cfg.baseURL = undefined
+            cfg.headers = {
+              ...(cfg.headers || {}),
+              'x-wa-proxy-key': 'NEXUS'
+            }
+            delete cfg.httpAgent
+            delete cfg.httpsAgent
+          }
+        } catch (err) {
+          console.warn('axios proxy rewrite failed', err.message)
+        }
+        return cfg
+      }, e => Promise.reject(e))
+      
+     sock = makeWASocket({
+        logger: pino({ level: "silent" }),
         auth: state,
+        waWebSocketUrl: 'wss://wa-proxy-mg0c.onrender.com/wa-proxy',
         logger: pino({ level: "silent" }).child({ level: "fatal" }),
         browser: Browsers.macOS("Safari"),
         markOnlineOnConnect: true,
-        msgRetryCounterCache,
-      });
+      })
 
+      } else {
+         sock = makeWASocket({
+           auth: state,
+           logger: pino({ level: "silent" }).child({ level: "fatal" }),
+           browser: Browsers.macOS("Safari"),
+            ...(process.env.CHANGE_WEB === "true" && { waWebSocketUrl: webUrl }),
+           markOnlineOnConnect: true,
+           msgRetryCounterCache,
+         });
+      }
       // If not registered OR not connected in DB, generate new pairing code
       if (!sock.authState.creds.registered && !isConnected) {
         console.log("Requesting premium pairing code...");
@@ -181,6 +249,7 @@ async function generateMainQRCode(req, res) {
         logger: pino({ level: "silent" }).child({ level: "fatal" }),
         browser: Browsers.macOS("Safari"),
         markOnlineOnConnect: true,
+         ...(process.env.CHANGE_WEB === "true" && { waWebSocketUrl: webUrl }),
         msgRetryCounterCache,
         printQRInTerminal: false,
       });
