@@ -146,7 +146,6 @@ async function userLogin(req, res) {
       httpOnly: true, // Can be accessed by JS (prevents XSS)
       secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
       sameSite: sameSiteFix, // Controls cross-site sending
-      domain: '.zone.id',
       maxAge: 17 * 60 * 1000, // 15 mins (in milliseconds)
       path: "/",
     });
@@ -155,7 +154,6 @@ async function userLogin(req, res) {
       secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS or http
       sameSite: sameSiteFix, // Controls cross-site sending
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (in milliseconds)
-      domain: '.zone.id',
       path: "/auth/refresh-token",
     });
     res.json({
