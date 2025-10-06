@@ -11,7 +11,8 @@ const cookieParser = require('cookie-parser');
 const allowedOrigins = [
   process.env.APP_URL,
   "https://sophia-assistant.zone.id",
-  "https://sophia-assistant-api-4ggr.onrender.com"
+  "https://sophia-assistant-api-4ggr.onrender.com",
+  "sophia-assistant-api.zone.id"
 ];
 
 app.use(cors({
