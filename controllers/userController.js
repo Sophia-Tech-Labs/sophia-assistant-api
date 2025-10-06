@@ -141,14 +141,13 @@ async function userLogin(req, res) {
     const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
-    const sameSiteFix = process.env.PROJECT_TYPE === "prod" ? "none" : "lax"
+    const sameSiteFix = process.env.PROJECT_TYPE === "prod" ? "lax" : "lax"
     res.cookie("accessToken", accessToken, {
       httpOnly: false, // Can be accessed by JS (prevents XSS)
       secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
       sameSite: sameSiteFix, // Controls cross-site sending
       maxAge: 17 * 60 * 1000, // 15 mins (in milliseconds)
       path: "/",
-      domain: '.zone.id'
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: false, // Can be accessed by JS (prevents XSS)
@@ -156,7 +155,6 @@ async function userLogin(req, res) {
       sameSite: sameSiteFix, // Controls cross-site sending
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (in milliseconds)
       path: "/auth/refresh-token",
-      domain: '.zone.id',
     });
     res.json({
       status: 200,
