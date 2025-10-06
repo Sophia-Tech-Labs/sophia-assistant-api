@@ -141,7 +141,7 @@ async function userLogin(req, res) {
     const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
-    const sameSiteFix = process.env.PROJECT_TYPE === "prod" ? "lax" : "lax"
+    const sameSiteFix = process.env.PROJECT_TYPE === "prod" ? "none" : "lax"
     res.cookie("accessToken", accessToken, {
       httpOnly: true, // Can be accessed by JS (prevents XSS)
       secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
