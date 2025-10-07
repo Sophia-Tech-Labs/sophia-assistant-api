@@ -39,24 +39,11 @@ const AdminLogin = {
       const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
-      const sameSiteFix = process.env.PROJECT_TYPE === "prod" ? "none" : "lax"
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true, // Can't be accessed by JS (prevents XSS)
-        secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
-        sameSite: sameSiteFix, // Controls cross-site sending
-        maxAge: 17 * 60 * 1000, // 15 mins (in milliseconds)
-        path: "/",
-      });
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true, // Can't be accessed by JS (prevents XSS)
-        secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS or http
-        sameSite: sameSiteFix, // Controls cross-site sending
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (in milliseconds)
-        path: "/auth/refresh-token",
-      });
       res.json({
         status: 200,
         message: "Logged In successfully",
+        accessToken,
+        refreshToken
       });
     } catch (error) {
       res.status(500).json({ status: 500, error: "Something went wrong" });
@@ -121,12 +108,19 @@ const AdminLogin = {
       const trueBool = process.env.PROJECT_TYPE === "prod" ? true : 1;
       const falseBool = process.env.PROJECT_TYPE === "prod" ? false : 0;
       const totalLinked = await db.query(
-        "SELECT * FROM users WHERE is_linked = $1 AND admin_id = $2",
-        [trueBool, req.user.id]
+        `SELECT s.is_linked 
+FROM users u
+INNER JOIN subscriptions s ON u.id = s.user_id
+WHERE u.admin_id = $1 AND s.is_linked = $2`,
+        [req.user.id,trueBool]
       );
+      console.log(totalLinked)
       const notLinked = await db.query(
-        "SELECT * FROM users WHERE is_linked = $1 AND admin_id = $2",
-        [falseBool, req.user.id]
+        `SELECT s.is_linked 
+FROM users u
+INNER JOIN subscriptions s ON u.id = s.user_id
+WHERE u.admin_id = $1 AND s.is_linked = $2`,
+        [req.user.id,falseBool]
       );
       const firstThreeUsers = await db.query(
         "SELECT name,email FROM users WHERE admin_id = $1 ORDER BY created_at ASC LIMIT 3",
@@ -134,7 +128,7 @@ const AdminLogin = {
       );
       // Fetch first 3 admins (adjust the query if needed)
 
-      const totalUsers = await db.query("SELECT COUNT(*) as count from users");
+      const totalUsers = await db.query("SELECT COUNT(*) as count from users WHERE admin_id = $1",[req.user.id]);
       res.json({
         totalUsers: totalUsers[0].count,
         linked: totalLinked.length,

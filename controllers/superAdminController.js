@@ -99,25 +99,11 @@ const superAdminFunctions = {
       const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
-      const sameSiteFix = process.env.PROJECT_TYPE === "prod" ? "none" : "lax"
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true, // Can't be accessed by JS (prevents XSS)
-        secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS
-        sameSite:sameSiteFix, // Controls cross-site sending
-        maxAge: 17 * 60 * 1000, // 15 mins (in milliseconds)
-        path: "/",
-      });
-
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true, // Can't be accessed by JS (prevents XSS)
-        secure: process.env.PROJECT_TYPE === "prod", // Only sent over HTTPS or http
-        sameSite: sameSiteFix, // Controls cross-site sending
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (in milliseconds)
-        path: "/auth/refresh-token",
-      });
       res.json({
         status: 200,
         message: "Logged In successfully",
+        accessToken,
+        refreshToken
       });
     } catch (error) {
       res.status(500).json({
@@ -127,6 +113,7 @@ const superAdminFunctions = {
       });
     }
   },
+
   async inviteAdmin(req, res) {
     const { name, email } = req.body;
     if (!name || !email) {
